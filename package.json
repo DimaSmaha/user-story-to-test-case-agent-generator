@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "auth": "tsx --tsconfig tsconfig.scripts.json scripts/auth.ts",
-    "us:to:tc": "tsx --tsconfig tsconfig.scripts.json scripts/run-pipeline.ts"
+    "us:to:tc": "tsx --tsconfig tsconfig.scripts.json scripts/run-pipeline.ts",
+    "server": "tsx server/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -14,11 +15,13 @@
   "devDependencies": {
     "@playwright/cli": "^0.1.13",
     "@playwright/test": "^1.58.2",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
     "tsx": "^4.21.0"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.138",
-    "dotenv": "^17.4.2"
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
   }
 }

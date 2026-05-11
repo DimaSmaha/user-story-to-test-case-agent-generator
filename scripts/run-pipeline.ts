@@ -208,9 +208,7 @@ async function main(): Promise<void> {
   });
 
   printBanner(`/flow-1a-gt-us-to-tc  --us-id ${usId}`);
-  console.log(
-    `${c.dim}Tracker: ${envVars.ISSUE_TRACKER}  │  URL: ${envVars.FAKE_TRACKER_URL}${c.reset}\n`,
-  );
+  console.log(`${c.dim}Tracker: ${envVars.ISSUE_TRACKER}${c.reset}\n`);
 
   const phaseCompacts: PhaseCompact[] = [];
   const textBuffer: string[] = [];
