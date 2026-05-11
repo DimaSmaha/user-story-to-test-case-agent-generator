@@ -78,6 +78,10 @@ For each non-SKIP scenario, produce a structured ideation unit:
 If a scenario involves navigation flow, modals, error states, or conditional UI
 that is not clear from the story text alone:
 
+0. Load auth state before navigating (REQUIRED):
+   ```bash
+   playwright-cli state-load .playwright-auth/auth.json
+   ```
 1. Use `playwright-cli` to navigate through the actual flow
 2. Observe exact labels, validation messages, route changes, modal triggers
 3. Use these observations to write accurate `ideas` and `verifications`

@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "auth": "tsx --tsconfig tsconfig.scripts.json scripts/auth.ts",
     "us:to:tc": "tsx --tsconfig tsconfig.scripts.json scripts/run-pipeline.ts"
   },
   "keywords": [],

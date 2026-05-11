@@ -68,6 +68,16 @@ Show checkpoint: `✓ Scenarios planned: N scenarios (M skipped as already cover
 
 ### Phase 1.5 — App exploration (`playwright-cli`)
 
+**Step 0 — Load auth state (REQUIRED)**
+
+Before any `playwright-cli` navigation, load the saved storage state:
+
+```bash
+playwright-cli state-load .playwright-auth/auth.json
+```
+
+If the file does not exist, stop and report: "Auth state missing — run `npm run auth` first."
+
 Use `playwright-cli` to explore the feature area described in `us.json`:
 
 1. Navigate to the relevant pages and flows.

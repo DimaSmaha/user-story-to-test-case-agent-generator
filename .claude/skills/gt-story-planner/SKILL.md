@@ -87,6 +87,11 @@ Write to `.workflow-artifacts/{run_id}/us.json`.
 
 Use `playwright-cli` to navigate to the feature area described in the story:
 
+0. Load the saved auth state before navigating (REQUIRED):
+   ```bash
+   playwright-cli state-load .playwright-auth/auth.json
+   ```
+   If the file does not exist, stop: report "Auth state missing — run `npm run auth` first."
 1. Open the app URL and navigate to the relevant page/feature
 2. Take a snapshot to observe the actual UI: field labels, button names, validation messages, navigation flow
 3. Try the happy path described in the acceptance criteria
