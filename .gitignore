@@ -1,0 +1,22 @@
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+junitreports
+pdf-reports
+.playwright-cli/
+order-success.png
+plans
+.claude/settings.local.json
+
+# Agentic-skills workflow artifacts (per-run outputs, traces, envelopes)
+/workflow-artifacts/
+/.workflow-artifacts/
+
+Skills to explore
+
+.env

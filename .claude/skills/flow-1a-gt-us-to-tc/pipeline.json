@@ -1,0 +1,87 @@
+{
+  "pipeline": "flow-1a-gt-us-to-tc",
+  "description": "Pipeline A-1: User Story → Test Cases — plan → ideate → batch TC generation → link to story",
+  "run_id_prefix": "gtc",
+  "artifact_root": ".workflow-artifacts/{run_id}",
+  "phases": [
+    {
+      "id": "phase-0",
+      "label": "Initialize",
+      "skill": null,
+      "reads": [],
+      "writes": [],
+      "on_failure": "stop",
+      "action": "generate run_id, mkdir artifact_root, validate inputs and env vars"
+    },
+    {
+      "id": "phase-1",
+      "label": "Plan",
+      "skill": "gt-story-planner",
+      "reads": [],
+      "writes": ["us.json", "scenarios.md"],
+      "resume_skip_if": "us.json",
+      "on_failure": "stop"
+    },
+    {
+      "id": "phase-2",
+      "label": "Ideation",
+      "skill": "gt-test-ideation",
+      "reads": ["us.json", "scenarios.md"],
+      "writes": ["test-ideas.json", "test-ideas.md"],
+      "resume_skip_if": "test-ideas.json",
+      "on_failure": "stop"
+    },
+    {
+      "id": "phase-3",
+      "label": "Batch TC Generation",
+      "skill": null,
+      "reads": ["test-ideas.json"],
+      "writes": [],
+      "on_failure": "log-and-continue",
+      "loop": {
+        "type": "for-each-scenario",
+        "source": "scenarios.md",
+        "skip_if_marked": "[SKIP]",
+        "iteration_phases": [
+          {
+            "id": "phase-3a",
+            "label": "Test Case",
+            "skill": "gt-test-case-generator",
+            "reads": ["test-ideas.json"],
+            "writes": ["tc-{index}.json"],
+            "resume_skip_if": "tc-{index}.json",
+            "on_failure": "log-and-continue-next-scenario"
+          }
+        ]
+      }
+    },
+    {
+      "id": "phase-4",
+      "label": "Link TCs to Story",
+      "skill": null,
+      "reads": ["us.json", "tc-*.json"],
+      "writes": ["links.json"],
+      "on_failure": "log-and-continue",
+      "action": "for each tc-*.json call link.sh --source <tracker_id> --target <us_id> --relation tested-by; write links.json"
+    },
+    {
+      "id": "phase-5",
+      "label": "Summary",
+      "skill": null,
+      "reads": ["tc-*.json", "links.json"],
+      "writes": [],
+      "on_failure": "stop",
+      "action": "emit final summary table of TCs created and link statuses"
+    }
+  ],
+  "compaction": {
+    "enabled": true,
+    "strategy": "emit-compact-block-then-drop",
+    "phases": {
+      "phase-1": { "retain": ["us_id", "title", "scenario_count"] },
+      "phase-2": { "retain": ["total_ideas", "scenario_count"] },
+      "phase-3a": { "retain": ["tc_id", "scenario_index", "title", "deduped"] },
+      "phase-4": { "retain": ["linked_count", "failed_count"] }
+    }
+  }
+}
