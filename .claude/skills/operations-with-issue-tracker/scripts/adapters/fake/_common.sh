@@ -23,7 +23,11 @@ curl_with_retry() {
   shift 2
   local attempt body http_code
   for attempt in 1 2 3; do
-    body="$(curl -s -w '\n%{http_code}' -X "$method" "$url" "$@" 2>/dev/null || true)"
+    body="$(curl -s --connect-timeout 5 --max-time 30 -w '\n%{http_code}' -X "$method" "$url" "$@")" || {
+      if [[ "$attempt" -lt 3 ]]; then sleep 1; continue; fi
+      printf '{"error":"curl failed after 3 attempts (network error)","url":"%s"}\n' "$url"
+      exit 1
+    }
     http_code="$(printf '%s' "$body" | tail -n1)"
     body="$(printf '%s' "$body" | head -n -1)"
     if [[ "$http_code" =~ ^[2][0-9]{2}$ ]]; then

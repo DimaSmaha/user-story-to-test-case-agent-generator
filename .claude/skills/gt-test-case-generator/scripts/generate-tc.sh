@@ -98,7 +98,7 @@ tracker_id="$(jq '.id' <<< "$create_response")"
 deduped="$(jq '.deduped' <<< "$create_response")"
 
 # --- Write tc.json ---
-local_id="tc-$(date +%s)"
+local_id="tc-$(date +%s)-${RANDOM}"
 
 jq -n \
   --arg id "$local_id" \

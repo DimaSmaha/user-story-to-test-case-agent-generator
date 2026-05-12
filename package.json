@@ -6,7 +6,10 @@
   "scripts": {
     "auth": "tsx --tsconfig tsconfig.scripts.json scripts/auth.ts",
     "us:to:tc": "tsx --tsconfig tsconfig.scripts.json scripts/run-pipeline.ts",
-    "server": "tsx server/index.ts"
+    "server": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
+    "lint": "eslint \"server/**/*.ts\" \"scripts/**/*.ts\" \"helpers/**/*.ts\"",
+    "format": "prettier --write \"server/**/*.ts\" \"scripts/**/*.ts\" \"helpers/**/*.ts\""
   },
   "keywords": [],
   "author": "",
@@ -17,6 +20,10 @@
     "@playwright/test": "^1.58.2",
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
+    "@typescript-eslint/eslint-plugin": "^8.59.3",
+    "@typescript-eslint/parser": "^8.59.3",
+    "eslint": "^10.3.0",
+    "prettier": "^3.8.3",
     "tsx": "^4.21.0"
   },
   "dependencies": {

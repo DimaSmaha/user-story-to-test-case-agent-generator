@@ -4,9 +4,8 @@
     "target": "ES2020",
     "lib": ["ES2020"],
     "module": "commonjs",
-    "moduleResolution": "node",
     "composite": false,
     "noEmit": true
   },
-  "include": ["scripts/**/*.ts"]
+  "include": ["scripts/**/*.ts", "server/**/*.ts", "helpers/**/*.ts"]
 }

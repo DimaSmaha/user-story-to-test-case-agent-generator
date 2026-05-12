@@ -12,7 +12,7 @@
 # generation is not retried (it is deterministic and fast).
 # Exits 0 even when individual scenarios fail — prints a summary table.
 
-set -uo pipefail
+set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TRACKER_SCRIPTS="$(cd "${SCRIPT_DIR}/../../operations-with-issue-tracker/scripts" && pwd)"

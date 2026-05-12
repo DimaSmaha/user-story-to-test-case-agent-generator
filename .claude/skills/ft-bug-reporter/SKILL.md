@@ -152,7 +152,7 @@ Write `.workflow-artifacts/{run_id}/bug.json`:
 ```
 
 **Severity mapping:**
-- `confidence >= 0.70` → `critical`
+- `confidence >= 0.85` → `critical`
 - `confidence >= 0.70` → `high`
 - `confidence >= 0.60` → `medium`
 
