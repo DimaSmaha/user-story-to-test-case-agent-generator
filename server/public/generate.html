@@ -544,6 +544,30 @@
       showCancelConfirm('Cancel this entire run?', () => {
         cancelBatch(batchId);
         hideAllCancelButtons(batchId);
+        // Optimistic update — flip all running/pending jobs for this batch immediately
+        document.querySelectorAll(`.job-badge[data-batch-id="${batchId}"]`).forEach(badge => {
+          if (badge.classList.contains('badge-running') || badge.classList.contains('badge-pending')) {
+            const storyId = badge.dataset.storyId;
+            badge.className = `badge badge-cancelled job-badge`;
+            badge.setAttribute('data-batch-id', batchId);
+            badge.setAttribute('data-story-id', storyId);
+            badge.textContent = 'cancelled';
+            jobStartTimes.delete(`${batchId}:${storyId}`);
+            const timerEl = document.querySelector(`.job-timer[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+            if (timerEl) timerEl.textContent = '';
+          }
+        });
+        const batchBadge = document.querySelector(`.batch-badge[data-batch-id="${batchId}"]`);
+        if (batchBadge) {
+          batchBadge.className = `badge badge-cancelled batch-badge`;
+          batchBadge.setAttribute('data-batch-id', batchId);
+          batchBadge.textContent = 'cancelled';
+        }
+        batchStartTimes.delete(batchId);
+        const batchTimer = document.querySelector(`.batch-timer[data-batch-id="${batchId}"]`);
+        if (batchTimer) batchTimer.textContent = '';
+        const clearBtn = document.querySelector(`.btn-clear[data-batch-id="${batchId}"]`);
+        if (clearBtn) clearBtn.style.display = '';
       });
     }
 
@@ -552,6 +576,17 @@
         cancelJob(batchId, storyId);
         document.querySelectorAll(`.job-cancel-btn[data-batch-id="${batchId}"][data-story-id="${storyId}"]`)
           .forEach(btn => btn.style.display = 'none');
+        // Optimistic update for this job
+        const badge = document.querySelector(`.job-badge[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+        if (badge) {
+          badge.className = `badge badge-cancelled job-badge`;
+          badge.setAttribute('data-batch-id', batchId);
+          badge.setAttribute('data-story-id', storyId);
+          badge.textContent = 'cancelled';
+        }
+        jobStartTimes.delete(`${batchId}:${storyId}`);
+        const timerEl = document.querySelector(`.job-timer[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+        if (timerEl) timerEl.textContent = '';
       });
     }
 
