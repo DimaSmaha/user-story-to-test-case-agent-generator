@@ -210,6 +210,19 @@
     .btn-cancel:hover { background: #fef2f2; }
     .btn-cancel:disabled { opacity: 0.35; cursor: not-allowed; }
 
+    /* ─── Modal links ────────────────────────────────────────────────────────── */
+    .modal-story-link {
+      color: #2563eb;
+      text-decoration: none;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 5px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .modal-story-link:hover { background: #dbeafe; }
+
     /* ─── Status badge ───────────────────────────────────────────────────────── */
     .badge {
       display: inline-flex;
@@ -403,6 +416,33 @@
     </div>
   </div>
 
+  <!-- Cancel confirm modal -->
+  <div id="cancel-modal-backdrop" style="
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.45); z-index:100;
+    align-items:center; justify-content:center;
+  ">
+    <div style="
+      background:#fff; border-radius:12px; padding:1.75rem;
+      width:100%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+    ">
+      <h2 style="font-size:1rem; font-weight:700; margin-bottom:0.5rem;">Confirm Cancel</h2>
+      <p id="cancel-modal-msg" style="font-size:0.875rem; color:#64748b; margin-bottom:1.5rem;"></p>
+      <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+        <button id="cancel-modal-dismiss" style="
+          padding:0.55rem 1rem; border:1px solid #e2e8f0;
+          background:#fff; border-radius:7px; font-size:0.875rem;
+          cursor:pointer; color:#475569;
+        ">Keep Running</button>
+        <button id="cancel-modal-confirm" style="
+          padding:0.55rem 1.1rem; background:#ef4444;
+          color:#fff; border:none; border-radius:7px;
+          font-size:0.875rem; font-weight:500; cursor:pointer;
+        ">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ─── State ─────────────────────────────────────────────────────────────────
     let trackerBaseUrl = '';
@@ -434,7 +474,7 @@
       storyLinksEl.innerHTML = '';
       for (const id of ids) {
         const a = document.createElement('a');
-        a.href = `${trackerBaseUrl}/stories/${id}`;
+        a.href = `${trackerBaseUrl}/tasks/${id}`;
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         a.textContent = `#${id} ↗`;
@@ -449,7 +489,12 @@
     const modalCancel = document.getElementById('modal-cancel');
 
     function showModal(ids, onConfirm) {
-      modalIds.textContent = ids.map(id => `#${id}`).join(', ');
+      modalIds.innerHTML = ids.map(id => {
+        if (trackerBaseUrl) {
+          return `<a class="modal-story-link" href="${escHtml(trackerBaseUrl)}/tasks/${id}" target="_blank" rel="noopener noreferrer">#${id} ↗</a>`;
+        }
+        return `<span style="font-weight:500;">#${id}</span>`;
+      }).join(' ');
       backdrop.style.display = 'flex';
       modalConfirm.onclick = () => { backdrop.style.display = 'none'; onConfirm(); };
       modalCancel.onclick = () => { backdrop.style.display = 'none'; };
@@ -458,6 +503,53 @@
     backdrop.addEventListener('click', e => {
       if (e.target === backdrop) backdrop.style.display = 'none';
     });
+
+    // ─── Cancel confirm modal ──────────────────────────────────────────────────
+    const cancelBackdrop = document.getElementById('cancel-modal-backdrop');
+    const cancelModalMsg = document.getElementById('cancel-modal-msg');
+    const cancelModalConfirmBtn = document.getElementById('cancel-modal-confirm');
+    const cancelModalDismiss = document.getElementById('cancel-modal-dismiss');
+
+    function showCancelConfirm(message, onConfirm) {
+      cancelModalMsg.textContent = message;
+      cancelBackdrop.style.display = 'flex';
+      cancelModalConfirmBtn.onclick = () => { cancelBackdrop.style.display = 'none'; onConfirm(); };
+      cancelModalDismiss.onclick = () => { cancelBackdrop.style.display = 'none'; };
+    }
+
+    cancelBackdrop.addEventListener('click', e => {
+      if (e.target === cancelBackdrop) cancelBackdrop.style.display = 'none';
+    });
+
+    function hideAllCancelButtons(batchId) {
+      document.querySelectorAll(`.batch-cancel-btn[data-batch-id="${batchId}"]`)
+        .forEach(btn => btn.style.display = 'none');
+      document.querySelectorAll(`.job-cancel-btn[data-batch-id="${batchId}"]`)
+        .forEach(btn => btn.style.display = 'none');
+    }
+
+    function confirmAndCancelBatch(batchId) {
+      showCancelConfirm('Cancel this entire run?', () => {
+        cancelBatch(batchId);
+        hideAllCancelButtons(batchId);
+      });
+    }
+
+    function confirmAndCancelJob(batchId, storyId) {
+      showCancelConfirm(`Cancel job for Story #${storyId}?`, () => {
+        cancelJob(batchId, storyId);
+        document.querySelectorAll(`.job-cancel-btn[data-batch-id="${batchId}"][data-story-id="${storyId}"]`)
+          .forEach(btn => btn.style.display = 'none');
+      });
+    }
+
+    function confirmAndCancelAll() {
+      showCancelConfirm('Cancel all running jobs?', () => {
+        cancelAll();
+        document.querySelectorAll('.btn-cancel').forEach(btn => btn.style.display = 'none');
+        document.getElementById('cancel-all-btn').style.display = 'none';
+      });
+    }
 
     generateBtn.addEventListener('click', () => {
       const ids = parseIds(storyInput.value);
@@ -490,7 +582,7 @@
       await fetch('/api/batches', { method: 'DELETE' });
     }
 
-    document.getElementById('cancel-all-btn').addEventListener('click', cancelAll);
+    document.getElementById('cancel-all-btn').addEventListener('click', confirmAndCancelAll);
 
     // ─── SSE ───────────────────────────────────────────────────────────────────
     function subscribeSSE(batchId) {
@@ -543,8 +635,8 @@
           <span class="timer batch-timer" data-batch-id="${batch.id}"></span>
           <span class="badge badge-${batch.status} batch-badge" data-batch-id="${batch.id}">${batch.status}</span>
           <button class="btn-cancel batch-cancel-btn" data-batch-id="${batch.id}"
-            ${batch.status !== 'running' ? 'disabled' : ''}
-            onclick="cancelBatch('${batch.id}')">Cancel</button>
+            style="${batch.status !== 'running' ? 'display:none' : ''}"
+            onclick="confirmAndCancelBatch('${batch.id}')">Cancel</button>
         </div>
         <div class="batch-body">
           <div class="auth-block" data-batch-id="${batch.id}">
@@ -583,8 +675,8 @@
                   data-batch-id="${batchId}" data-story-id="${job.storyId}">${job.status}</span>
             <button class="btn-cancel job-cancel-btn"
                     data-batch-id="${batchId}" data-story-id="${job.storyId}"
-                    ${job.status !== 'running' && job.status !== 'pending' ? 'disabled' : ''}
-                    onclick="cancelJob('${batchId}','${job.storyId}')">Cancel</button>
+                    style="${job.status !== 'running' && job.status !== 'pending' ? 'display:none' : ''}"
+                    onclick="confirmAndCancelJob('${batchId}','${job.storyId}')">Cancel</button>
           </div>
           <div class="block-header" onclick="toggleBlock(this)">
             <span class="block-label">Pipeline</span>
@@ -649,7 +741,12 @@
       }
       const cancelBtn = document.querySelector(`.job-cancel-btn[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
       if (cancelBtn) {
-        cancelBtn.disabled = status !== 'running' && status !== 'pending';
+        if (status === 'running' || status === 'pending') {
+          cancelBtn.style.display = '';
+          cancelBtn.disabled = false;
+        } else {
+          cancelBtn.style.display = 'none';
+        }
       }
       if (status !== 'running') {
         jobStartTimes.delete(`${batchId}:${storyId}`);
@@ -665,8 +762,7 @@
         badge.setAttribute('data-batch-id', batchId);
         badge.textContent = status;
       }
-      const cancelBtn = document.querySelector(`.batch-cancel-btn[data-batch-id="${batchId}"]`);
-      if (cancelBtn) cancelBtn.disabled = true;
+      hideAllCancelButtons(batchId);
 
       batchStartTimes.delete(batchId);
       const timerEl = document.querySelector(`.batch-timer[data-batch-id="${batchId}"]`);

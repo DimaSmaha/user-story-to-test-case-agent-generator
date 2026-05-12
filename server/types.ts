@@ -12,6 +12,7 @@ export interface Job {
   endedAt: number | null;
   pipelineLogs: string[];
   process: ChildProcess | null;
+  timeoutHandle: ReturnType<typeof setTimeout> | null;
 }
 
 export interface Batch {
@@ -25,4 +26,5 @@ export interface Batch {
   authProcess: ChildProcess | null;
   jobs: Map<string, Job>;
   sseClients: Set<Response>;
+  timeoutHandle: ReturnType<typeof setTimeout> | null;
 }

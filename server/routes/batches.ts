@@ -32,10 +32,12 @@ router.post("/api/batches", (req, res) => {
           endedAt: null,
           pipelineLogs: [],
           process: null,
+          timeoutHandle: null,
         } satisfies Job,
       ]),
     ),
     sseClients: new Set(),
+    timeoutHandle: null,
   };
 
   batches.set(batch.id, batch);

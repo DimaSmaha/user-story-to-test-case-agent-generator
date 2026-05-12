@@ -55,7 +55,7 @@ Each stage reads the previous stage's artifact from `.workflow-artifacts/{run_id
   "title": "User can log in with valid credentials",
   "description": "...",
   "ac": ["Given valid credentials, user lands on inventory page", "..."],
-  "url": "http://localhost:3000/stories/112"
+  "url": "http://localhost:3000/tasks/112"
 }
 ```
 When story text is pasted directly: `"id": "manual"`, `"url": null`.
