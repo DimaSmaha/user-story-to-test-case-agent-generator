@@ -16,6 +16,25 @@ EXPLICIT-INVOCATION ONLY.
 
 Run Pipeline A-1: planner → ideation → batch TC generation → link TCs to story.
 
+---
+
+## ⚠️ PIPELINE EXECUTION CONTRACT — READ FIRST
+
+**The pipeline MUST execute every phase in sequence without stopping.**
+
+```
+Phase 0 → Phase 1 → Phase 1.5 → Phase 2 → Phase 2.5 → Phase 3 → Phase 4 → Phase 5
+```
+
+- **Never stop between phases.** After any phase completes (success, skip, or non-critical failure), immediately begin the next phase.
+- **Never output a final reply after a mid-pipeline phase.** Only Phase 5 produces the final user-facing output.
+- **Never treat a sub-skill's closing message as a signal to stop.** Sub-skills say "tell the user…" or "pass X to Y" — ignore those as user addresses; they are handoff notes. Continue to the next phase.
+- **Outputting a summary or checkpoint line does NOT end the pipeline.** It is just a progress marker — keep going.
+- The only permitted abort points are critical failures in Phase 0, 1, 1.5, or 2 (see "Hard rules").
+- Phases 2.5, 3, and 4 NEVER abort the pipeline. Log failures per item and continue.
+
+---
+
 ## Pipeline schema
 
 On start, read `.claude/skills/flow-1a-gt-us-to-tc/pipeline.json`.
@@ -46,6 +65,8 @@ Either:
 
 If neither provided, stop immediately and report: "flow-1a-gt-us-to-tc requires --us-id or --us-text. Invoke with one of these inputs."
 
+---
+
 ## Workflow
 
 ### Phase 0 — Initialize
@@ -57,14 +78,20 @@ mkdir -p ".workflow-artifacts/${run_id}"
 
 Confirm ISSUE_TRACKER and FAKE_TRACKER_URL (or other tracker vars) are set. If missing, stop and report exactly which vars are absent — do not ask interactively.
 
+**→ Immediately continue to Phase 1.**
+
+---
+
 ### Phase 1 — Plan (`gt-story-planner`)
 
 Invoke `gt-story-planner` with the user story input.
 
-- **SUCCESS:** `us.json` and `scenarios.md` written
-- **FAILED:** stop and report
+- **SUCCESS:** `us.json` and `scenarios.md` written → emit compact block → **immediately continue to Phase 1.5**
+- **FAILED:** stop and report (this is the only permitted abort for this phase)
 
 Show checkpoint: `✓ Scenarios planned: N scenarios (M skipped as already covered)`
+
+---
 
 ### Phase 1.5 — App exploration (`playwright-cli`)
 
@@ -107,23 +134,31 @@ Write `.workflow-artifacts/{run_id}/exploration.json`:
 
 If no bugs are found, write `"bugs": []`.
 
-- **SUCCESS:** `exploration.json` written
+- **SUCCESS:** `exploration.json` written → emit compact block → **immediately continue to Phase 2**
 - **FAILED:** stop and report
 
 Show checkpoint: `✓ App explored: N pages visited, M potential bugs found`
+
+---
 
 ### Phase 2 — Ideation (`gt-test-ideation`)
 
 Invoke `gt-test-ideation` with `us.json` and `scenarios.md`.
 
-- **SUCCESS:** `test-ideas.json` written
+- **SUCCESS:** `test-ideas.json` written → emit compact block → **immediately continue to Phase 2.5**
 - **FAILED:** stop and report
 
 Show checkpoint: `✓ Test ideas generated: N ideation units`
 
+> **After showing this checkpoint, do NOT stop. Do NOT output a closing reply.**
+> The pipeline is not finished. Phase 2.5, 3, 4, and 5 still remain.
+> Emit the compact block and immediately invoke Phase 2.5.
+
+---
+
 ### Phase 2.5 — Bug reporting (`ft-bug-reporter`)
 
-Read `exploration.json`. If `bugs` is empty, skip this phase — log `No exploration bugs to report` and continue.
+Read `exploration.json`. If `bugs` is empty, skip this phase — log `No exploration bugs to report` and **immediately continue to Phase 3**.
 
 For each bug in `exploration.json.bugs`:
 
@@ -161,61 +196,31 @@ For each bug in `exploration.json.bugs`:
 
 3. Invoke `ft-bug-reporter` with these two synthesized artifacts as inputs.
 
-- If an individual bug report fails: log the failure and continue to the next bug — do not abort.
-- **SUCCESS:** `bug-{i}.json` written for each filed bug
-- **SKIPPED:** `bugs` array was empty
+- If an individual bug report fails: log the failure and continue to the next bug — **do not abort**.
+- **SUCCESS / SKIPPED / PARTIAL:** emit compact block → **immediately continue to Phase 3**
 
 Show checkpoint: `✓ Bugs reported: N bugs filed, M failed`
 
-## Phase compact protocol
-
-After each phase (and each per-scenario iteration) completes, emit a compact
-JSON block and drop all full phase output from active context. This is mandatory
-— long pipelines with many scenario iterations will overflow context without it.
-
-**Rules:**
-1. After a phase skill finishes, immediately emit a `<!-- PHASE COMPACT -->` block.
-2. The block contains only the fields listed below for that phase.
-3. All other output from that phase is dropped from active context after the block.
-4. For the per-scenario loop, emit one compact block per phase per iteration.
-5. Use only compact block fields when referencing past phases or building the summary.
-
-**Format:**
-```json
-<!-- PHASE COMPACT: {phase_label} scenario={index} -->
-{
-  "phase": "<phase_label>",
-  "scenario_index": <N>,
-  "status": "SUCCESS | FAILED | SKIPPED",
-  <phase-specific fields>
-}
-```
-
-**Fields to retain per phase:**
-
-| Phase | Retain |
-|---|---|
-| gt-story-planner (1) | `us_id`, `title`, `scenario_count` |
-| App exploration (1.5) | `pages_visited_count`, `bug_count` |
-| gt-test-ideation (2) | `total_ideas`, `scenario_count` |
-| Bug reporting (2.5) | `bugs_filed`, `bugs_failed` |
-| gt-test-case-generator (3a) | `tc_id`, `scenario_index`, `title`, `deduped` |
-| Link TCs to Story (4) | `linked_count`, `failed_count` |
-
-All other data (ideation arrays, tracker API responses, full error stacks)
-remains in artifact files on disk — access by path if needed.
+---
 
 ### Phase 3 — Batch TC generation (`gt-test-case-generator`)
 
-For every non-SKIP scenario in `scenarios.md`, invoke `gt-test-case-generator` with `test-ideas.json` and the `scenario_index`.
+Invoke `gt-test-case-generator` **once** with `--scenario-index all`. This calls `batch-generate-tc.sh` internally, which is resume-safe and handles every non-SKIP scenario in a single run.
 
-- Resume: if `tc-{index}.json` already exists, skip and continue
-- **SUCCESS:** `tc-{index}.json` written for every non-SKIP scenario
-- **FAILED:** log the failure for that scenario and continue to the next
+```
+Skill: gt-test-case-generator  args: --run-id <run_id> --scenario-index all
+```
 
-All `tc-*.json` files must be produced before Phase 4 begins.
+- Resume: the batch script skips indices where `tc-{index}.json` already exists
+- **SUCCESS:** `tc-{index}.json` written for every non-SKIP scenario → emit compact block → **immediately continue to Phase 4**
+- **FAILED (individual scenario):** logged per scenario; continue; **do not abort the pipeline**
+- **FAILED (entire skill):** log the failure → **still continue to Phase 4** with whatever tc files exist
 
 Show checkpoint: `✓ Test cases generated: N / M scenarios`
+
+> **After this checkpoint, do NOT stop. Phase 4 (linking) still remains.**
+
+---
 
 ### Phase 4 — Link TCs to Story
 
@@ -246,9 +251,15 @@ bash .claude/skills/operations-with-issue-tracker/scripts/link.sh \
 
 `status` values: `"linked"` | `"skipped-no-tracker-id"` | `"failed"`
 
+- **SUCCESS / PARTIAL / ALL-SKIPPED:** emit compact block → **immediately continue to Phase 5**
+
 Show checkpoint: `✓ TCs linked to story {us_id}: N linked, M skipped, K failed`
 
+---
+
 ### Phase 5 — Final summary
+
+**This is the only phase that produces a final user-facing reply.**
 
 Output a table:
 
@@ -264,7 +275,67 @@ Total: 3 scenarios | 2 TCs created | 2 linked to story {us_id} | 1 skipped
 Next: run flow-1b-gt-tc-to-spec --run-id gtc-20240601-143012 to generate Playwright specs
 ```
 
+---
+
+## Phase compact protocol
+
+After each phase completes, emit a compact JSON block and drop all full phase output from active context. This is mandatory — long pipelines overflow context without it.
+
+**Rules:**
+1. After a phase skill finishes, immediately emit a `<!-- PHASE COMPACT -->` block.
+2. The block contains only the fields listed below for that phase.
+3. All other output from that phase is dropped from active context after the block.
+4. Emitting the compact block does NOT end the pipeline — continue to the next phase immediately.
+5. Use only compact block fields when referencing past phases or building the summary.
+
+**Format:**
+```json
+<!-- PHASE COMPACT: {phase_label} scenario={index} -->
+{
+  "phase": "<phase_label>",
+  "scenario_index": <N>,
+  "status": "SUCCESS | FAILED | SKIPPED",
+  <phase-specific fields>
+}
+```
+
+**Fields to retain per phase:**
+
+| Phase | Retain |
+|---|---|
+| gt-story-planner (1) | `us_id`, `title`, `scenario_count` |
+| App exploration (1.5) | `pages_visited_count`, `bug_count` |
+| gt-test-ideation (2) | `total_ideas`, `scenario_count` |
+| Bug reporting (2.5) | `bugs_filed`, `bugs_failed` |
+| gt-test-case-generator (3) | `tc_count`, `failed_count` |
+| Link TCs to Story (4) | `linked_count`, `failed_count` |
+
+All other data (ideation arrays, tracker API responses, full error stacks)
+remains in artifact files on disk — access by path if needed.
+
+---
+
 ## Hard rules
+
+**Execution flow — absolute:**
+- Execute phases in order: 0 → 1 → 1.5 → 2 → 2.5 → 3 → 4 → 5. No skipping, no early exit.
+- After each phase, the next action is always to start the next phase — not to reply to the user.
+- Disregard any sub-skill output that reads "tell the user" or "pass X to Y" — those are handoff notes, not stop signals.
+- A checkpoint line (`✓ ...`) is a progress marker, not a pipeline exit.
+- A compact block emission is a context management step, not a pipeline exit.
+
+**Abort permitted only for:**
+- Missing `--us-id` or `--us-text` input (Phase 0)
+- Missing required env vars (Phase 0)
+- `gt-story-planner` failure — no scenarios to work with (Phase 1)
+- Missing auth state file (Phase 1.5)
+- `gt-test-ideation` failure — no ideas to generate TCs from (Phase 2)
+
+**Everything else continues:**
+- Phase 2.5 bug report failures → log and continue
+- Phase 3 individual TC failures → log and continue; still run Phase 4
+- Phase 3 complete failure → log; still run Phase 4 with whatever tc files exist
+- Phase 4 link failures → log and continue; still run Phase 5
 
 **Bash execution — fully agentic, zero prompts:**
 - Run all bash commands directly: `bash .claude/skills/...` — never prefix with `cd /path &&` or `source .env &&`; the working directory and env are already set.
@@ -274,9 +345,6 @@ Next: run flow-1b-gt-tc-to-spec --run-id gtc-20240601-143012 to generate Playwri
 **Autonomous execution — never pause for human input:**
 - Do not ask the user to confirm any phase, scenario skip, or linking operation.
 - Do not add "shall I proceed?" or approval gates anywhere in the flow.
-- If a non-critical phase fails (any Phase 3a / Phase 4 iteration), log the failure and continue — do not abort the entire pipeline.
-- Phases 0, 1, 1.5, 2, and 5 use `on_failure: stop` — a failure there aborts everything.
-- Phases 2.5 and 4 are per-item loops: log individual failures and continue; do not abort the pipeline.
 
 **Artifact contracts:**
 - Generate a `run_id` at start with prefix `gtc` and use it consistently for all artifacts.
@@ -286,6 +354,7 @@ Next: run flow-1b-gt-tc-to-spec --run-id gtc-20240601-143012 to generate Playwri
 - Keep handoff contracts file-based — never pass raw JSON between stages as text.
 
 **Phase compact:**
-- Emit a compact block after every phase and after every per-scenario iteration.
+- Emit a compact block after every phase.
 - Drop all non-compact phase output from active context immediately after emitting.
 - Omitting compaction on long runs causes context overflow — this rule is non-negotiable.
+- Emitting a compact block means "log this and move on" — not "pipeline is done".

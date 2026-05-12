@@ -138,7 +138,9 @@ for review — one section per scenario with conditions, numbered steps, and ass
 - `.workflow-artifacts/{run_id}/test-ideas.json`
 - `.workflow-artifacts/{run_id}/test-ideas.md`
 
-Tell the user: "Pass `test-ideas.json` to `gt-test-case-generator` with a scenario index to create tracker test cases."
+Output the phase checkpoint: `✓ Test ideas generated: N ideation units` (replace N with the actual count).
+
+Return control to the caller — do not suggest the pipeline is finished.
 
 ## Hard rules
 

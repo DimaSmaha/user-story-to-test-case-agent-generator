@@ -45,6 +45,17 @@ export function printPhaseCompact(compact: PhaseCompact): void {
   console.log(`${c.magenta}└${"─".repeat(42)}${c.reset}`);
 }
 
+const SENSITIVE_PATTERNS = [".env", ".playwright-auth", "auth.json", "cat .env", "Get-Content .env"];
+const PROJECT_ROOT_RE = /[A-Z]:\\[^\s"']+user-story-to-test-case-agent-generator[\\\/]/gi;
+
+function sanitizeDetail(raw: string): string {
+  const lower = raw.toLowerCase();
+  if (SENSITIVE_PATTERNS.some((p) => lower.includes(p.toLowerCase()))) {
+    return "[config/auth operation]";
+  }
+  return raw.replace(PROJECT_ROOT_RE, "");
+}
+
 export function printToolUse(name: string, input: Record<string, unknown>): void {
   let detail = "";
   if (typeof input["command"] === "string") detail = input["command"].slice(0, 120);
@@ -53,6 +64,7 @@ export function printToolUse(name: string, input: Record<string, unknown>): void
   else if (typeof input["url"] === "string") detail = input["url"];
   else if (typeof input["prompt"] === "string") detail = (input["prompt"] as string).slice(0, 80);
   else detail = JSON.stringify(input).slice(0, 80);
+  detail = sanitizeDetail(detail);
   console.log(`  ${c.yellow}[TOOL]${c.reset} ${c.bold}${name}${c.reset} ${c.dim}${detail}${c.reset}`);
 }
 

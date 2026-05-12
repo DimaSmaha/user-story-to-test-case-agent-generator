@@ -127,6 +127,7 @@ export function cancelBatch(batch: Batch): void {
         killProcess(job.process);
         job.process = null;
       }
+      sendSSE(batch, "job-status", { storyId: job.storyId, status: "cancelled" });
     }
   }
 

@@ -81,4 +81,18 @@ router.delete("/api/batches/:batchId/jobs/:storyId", (req, res) => {
   res.json({ ok: true });
 });
 
+router.delete("/api/batches/:id/clear", (req, res) => {
+  const batch = batches.get(req.params["id"] ?? "");
+  if (!batch) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  if (batch.status === "running") {
+    res.status(409).json({ error: "Cannot clear a running batch" });
+    return;
+  }
+  batches.delete(batch.id);
+  res.json({ ok: true });
+});
+
 export default router;

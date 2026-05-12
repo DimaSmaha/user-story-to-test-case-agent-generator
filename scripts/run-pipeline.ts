@@ -11,7 +11,7 @@ import {
 } from "./utils/colors";
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
-const MAX_TURNS = Number(process.env["MAX_PIPELINE_TURNS"] ?? 120);
+const MAX_TURNS = Number(process.env["MAX_PIPELINE_TURNS"] ?? 200);
 
 async function main(): Promise<void> {
   const usId = process.argv[2];

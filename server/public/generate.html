@@ -163,6 +163,18 @@
     }
     .btn-cancel-all:hover { background: #fef2f2; }
 
+    .btn-clear {
+      padding: 0.3rem 0.7rem;
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #64748b;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-clear:hover { background: #f1f5f9; }
+
     .runs-list { display: flex; flex-direction: column; gap: 1.25rem; }
 
     /* ─── Batch card ─────────────────────────────────────────────────────────── */
@@ -548,6 +560,15 @@
         cancelAll();
         document.querySelectorAll('.btn-cancel').forEach(btn => btn.style.display = 'none');
         document.getElementById('cancel-all-btn').style.display = 'none';
+        // Optimistic update — flip all running/pending badges to cancelled immediately
+        document.querySelectorAll('.job-badge.badge-running, .job-badge.badge-pending').forEach(badge => {
+          badge.className = badge.className.replace(/badge-(running|pending)/, 'badge-cancelled');
+          badge.textContent = 'cancelled';
+        });
+        document.querySelectorAll('.batch-badge.badge-running').forEach(badge => {
+          badge.className = badge.className.replace('badge-running', 'badge-cancelled');
+          badge.textContent = 'cancelled';
+        });
       });
     }
 
@@ -580,6 +601,15 @@
 
     async function cancelAll() {
       await fetch('/api/batches', { method: 'DELETE' });
+    }
+
+    async function clearBatch(batchId) {
+      await fetch(`/api/batches/${batchId}/clear`, { method: 'DELETE' });
+      const card = document.querySelector(`.batch-card[data-batch-id="${batchId}"]`);
+      if (card) card.remove();
+      if (document.querySelectorAll('.batch-card').length === 0) {
+        document.getElementById('runs-section').style.display = 'none';
+      }
     }
 
     document.getElementById('cancel-all-btn').addEventListener('click', confirmAndCancelAll);
@@ -637,6 +667,9 @@
           <button class="btn-cancel batch-cancel-btn" data-batch-id="${batch.id}"
             style="${batch.status !== 'running' ? 'display:none' : ''}"
             onclick="confirmAndCancelBatch('${batch.id}')">Cancel</button>
+          <button class="btn-clear" data-batch-id="${batch.id}"
+            style="${batch.status === 'running' ? 'display:none' : ''}"
+            onclick="clearBatch('${batch.id}')">Clear</button>
         </div>
         <div class="batch-body">
           <div class="auth-block" data-batch-id="${batch.id}">
@@ -699,7 +732,7 @@
       if (empty) empty.remove();
       const div = document.createElement('div');
       div.className = 'log-line';
-      div.textContent = text;
+      div.innerHTML = ansiToHtml(text);
       wrap.appendChild(div);
       scrollIfBottom(wrap);
     }
@@ -711,7 +744,7 @@
       if (empty) empty.remove();
       const div = document.createElement('div');
       div.className = 'log-line';
-      div.textContent = text;
+      div.innerHTML = ansiToHtml(text);
       wrap.appendChild(div);
       scrollIfBottom(wrap);
     }
@@ -764,9 +797,17 @@
       }
       hideAllCancelButtons(batchId);
 
+      // Show Clear button once batch reaches a terminal state
+      const clearBtn = document.querySelector(`.btn-clear[data-batch-id="${batchId}"]`);
+      if (clearBtn && status !== 'running') clearBtn.style.display = '';
+
       batchStartTimes.delete(batchId);
       const timerEl = document.querySelector(`.batch-timer[data-batch-id="${batchId}"]`);
       if (timerEl) timerEl.textContent = '';
+
+      // Hide Cancel All button if no running batches remain
+      const anyRunning = document.querySelectorAll('.batch-badge.badge-running').length > 0;
+      if (!anyRunning) document.getElementById('cancel-all-btn').style.display = 'none';
     }
 
     // ─── Timers ────────────────────────────────────────────────────────────────
@@ -838,6 +879,36 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
+    }
+
+    // ─── ANSI → HTML ───────────────────────────────────────────────────────────
+    const ANSI_COLORS = {
+      '30': 'color:#475569', '31': 'color:#ef4444', '32': 'color:#22c55e',
+      '33': 'color:#eab308', '34': 'color:#3b82f6', '35': 'color:#a855f7',
+      '36': 'color:#06b6d4', '37': 'color:#f8fafc',
+    };
+    function ansiToHtml(raw) {
+      const safe = escHtml(raw);
+      let out = '';
+      let openSpans = 0;
+      const parts = safe.split(/(\x1b\[\d+m)/);
+      for (const part of parts) {
+        const m = part.match(/^\x1b\[(\d+)m$/);
+        if (!m) { out += part; continue; }
+        const code = m[1];
+        if (code === '0') {
+          while (openSpans-- > 0) out += '</span>';
+          openSpans = 0;
+        } else if (code === '1') {
+          out += '<span style="font-weight:700">'; openSpans++;
+        } else if (code === '2') {
+          out += '<span style="opacity:0.5">'; openSpans++;
+        } else if (ANSI_COLORS[code]) {
+          out += `<span style="${ANSI_COLORS[code]}">`;  openSpans++;
+        }
+      }
+      while (openSpans-- > 0) out += '</span>';
+      return out;
     }
 
     // ─── Init ──────────────────────────────────────────────────────────────────
