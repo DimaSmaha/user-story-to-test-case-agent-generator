@@ -172,7 +172,7 @@ Tell the user: "Pass these artifacts to `gt-test-ideation` to expand scenarios i
 
 ## Hard rules
 
-- **Fully agentic — never pause for input:** run all bash commands directly (e.g., `bash .claude/skills/operations-with-issue-tracker/scripts/preflight.sh`). Never prefix with `cd /path &&` or `source .env &&`; the working directory and env vars are already available. Do not ask the user anything mid-execution.
+- **Fully agentic — never pause for input:** use the **Bash tool** (not PowerShell) to run all bash commands (e.g., `bash .claude/skills/operations-with-issue-tracker/scripts/preflight.sh`). Never prefix with `cd /path &&` or `source .env &&`; the working directory and env vars are already available. Do not ask the user anything mid-execution.
 - Include at least one negative case per acceptance criterion — no exceptions.
 - Use `playwright-cli` to verify UI state before designing scenarios.
 - Do not create tracker test cases or write Playwright code at this stage.

@@ -55,12 +55,15 @@ async function main(): Promise<void> {
       prompt: `/flow-1a-gt-us-to-tc --us-id ${usId}`,
       options: {
         cwd: PROJECT_ROOT,
-        settingSources: ["user", "project"],
+        settingSources: ["user", "project", "local"],
         skills: "all",
         permissionMode: "bypassPermissions",
         maxTurns: MAX_TURNS,
         abortController: controller,
         env: {
+          PATH: process.env["PATH"],
+          HOME: process.env["HOME"] ?? process.env["USERPROFILE"],
+          USERPROFILE: process.env["USERPROFILE"],
           ISSUE_TRACKER: envVars.ISSUE_TRACKER,
           FAKE_TRACKER_URL: envVars.FAKE_TRACKER_URL,
         },

@@ -56,9 +56,23 @@ function sanitizeDetail(raw: string): string {
   return raw.replace(PROJECT_ROOT_RE, "");
 }
 
+const MEANINGFUL_RE = /\.sh\b|bash |scripts\/|npx |tsx |node |^& "/;
+const PREAMBLE_RE = /^(function |param\(|\$psi|\}|#)/;
+
+function extractCommand(cmd: string): string {
+  const lines = cmd.split("\n").map((l) => l.trim()).filter(Boolean);
+  if (lines.length <= 1) return cmd.slice(0, 120);
+  // Prefer the last line that looks like a real invocation
+  const meaningful = lines.filter((l) => MEANINGFUL_RE.test(l));
+  if (meaningful.length > 0) return meaningful[meaningful.length - 1]!.slice(0, 120);
+  // Fall back to first non-preamble line
+  const fallback = lines.find((l) => !PREAMBLE_RE.test(l));
+  return (fallback ?? lines[0] ?? cmd).slice(0, 120);
+}
+
 export function printToolUse(name: string, input: Record<string, unknown>): void {
   let detail = "";
-  if (typeof input["command"] === "string") detail = input["command"].slice(0, 120);
+  if (typeof input["command"] === "string") detail = extractCommand(input["command"]);
   else if (typeof input["file_path"] === "string") detail = input["file_path"];
   else if (typeof input["pattern"] === "string") detail = input["pattern"];
   else if (typeof input["url"] === "string") detail = input["url"];

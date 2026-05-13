@@ -355,6 +355,78 @@
       font-variant-numeric: tabular-nums;
       color: #64748b;
     }
+
+    /* ─── Theme toggle button ────────────────────────────────────────────────── */
+    #theme-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #94a3b8;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    #theme-btn:hover { color: #f8fafc; }
+
+    /* ─── Dark mode overrides ────────────────────────────────────────────────── */
+    :root.dark { color-scheme: dark; }
+    .dark body { background: #0f172a; color: #e2e8f0; }
+    .dark header { background: #0f172a; }
+    .dark .form-card,
+    .dark .batch-card { background: #1e293b; border-color: #334155; box-shadow: none; }
+    .dark .form-card h2 { color: #f1f5f9; }
+    .dark .runs-header h2 { color: #f1f5f9; }
+    .dark .batch-header { background: #1e293b; border-color: #334155; }
+    .dark .batch-title { color: #f1f5f9; }
+    .dark .job-header { background: #1e293b; border-color: #334155; }
+    .dark .job-title { color: #f1f5f9; }
+    .dark .job-card { border-color: #334155; }
+    .dark .auth-block { border-color: #334155; }
+    .dark .block-header { background: #1e293b; border-color: #334155; }
+    .dark .block-header:hover { background: #263148; }
+    .dark .block-label { color: #94a3b8; }
+    .dark .input-wrap label { color: #94a3b8; }
+    .dark .input-wrap input {
+      background: #0f172a; border-color: #475569; color: #e2e8f0;
+    }
+    .dark .input-wrap input:focus {
+      border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+    }
+    .dark .timer { color: #64748b; }
+    .dark .job-timer { color: #64748b; }
+    .dark .btn-clear { border-color: #475569; color: #94a3b8; }
+    .dark .btn-clear:hover { background: #334155; }
+    .dark .btn-cancel-all { border-color: #7f1d1d; color: #f87171; }
+    .dark .btn-cancel-all:hover { background: rgba(127,29,29,.3); }
+    .dark .badge-pending   { background: #1e293b; color: #94a3b8; }
+    .dark .badge-running   { background: #1e3a5f; color: #60a5fa; }
+    .dark .badge-completed { background: #14532d; color: #4ade80; }
+    .dark .badge-failed    { background: #450a0a; color: #f87171; }
+    .dark .badge-cancelled { background: #431407; color: #fb923c; }
+    .dark .story-links a {
+      background: #1e3a5f; border-color: #1d4ed8; color: #93c5fd;
+    }
+    .dark .story-links a:hover { border-color: #3b82f6; }
+    .dark .modal-story-link {
+      background: #1e3a5f; border-color: #1d4ed8; color: #93c5fd;
+    }
+    .dark .modal-story-link:hover { border-color: #3b82f6; }
+    /* Modal panels */
+    .dark #modal-backdrop > div,
+    .dark #cancel-modal-backdrop > div {
+      background: #1e293b; color: #e2e8f0;
+    }
+    .dark #modal-backdrop > div p,
+    .dark #cancel-modal-msg { color: #94a3b8; }
+    .dark #modal-ids {
+      background: #0f172a; border-color: #334155; color: #e2e8f0;
+    }
+    .dark #modal-cancel,
+    .dark #cancel-modal-dismiss {
+      background: #0f172a; border-color: #334155; color: #94a3b8;
+    }
   </style>
 </head>
 <body>
@@ -362,6 +434,7 @@
     <a href="/" class="back-link">&#8592; Home</a>
     <span class="header-sep">/</span>
     <h1>Test Case Generator</h1>
+    <button id="theme-btn" title="Toggle dark mode">🌙</button>
   </header>
 
   <main>
@@ -716,7 +789,7 @@
             <div class="log-wrap auth-log" data-batch-id="${batch.id}">
               ${batch.authLogs.length === 0
                 ? '<div class="log-empty">Waiting for auth...</div>'
-                : batch.authLogs.map(l => `<div class="log-line">${escHtml(l)}</div>`).join('')}
+                : batch.authLogs.map(l => `<div class="log-line">${ansiToHtml(l)}</div>`).join('')}
             </div>
           </div>
           <div class="jobs-list" data-batch-id="${batch.id}">
@@ -753,7 +826,7 @@
           <div class="log-wrap pipeline-log" data-batch-id="${batchId}" data-story-id="${job.storyId}">
             ${job.pipelineLogs.length === 0
               ? `<div class="log-empty">Waiting for pipeline...</div>`
-              : job.pipelineLogs.map(l => `<div class="log-line">${escHtml(l)}</div>`).join('')}
+              : job.pipelineLogs.map(l => `<div class="log-line">${ansiToHtml(l)}</div>`).join('')}
           </div>
         </div>
       `;
@@ -948,6 +1021,22 @@
 
     // ─── Init ──────────────────────────────────────────────────────────────────
     loadConfig().then(loadBatches);
+
+    // ─── Dark mode toggle ──────────────────────────────────────────────────────
+    (function () {
+      const html = document.documentElement;
+      const btn = document.getElementById('theme-btn');
+      function applyScheme(dark) {
+        html.classList.toggle('dark', dark);
+        btn.textContent = dark ? '☀' : '🌙';
+      }
+      applyScheme(localStorage.getItem('colorScheme') === 'dark');
+      btn.addEventListener('click', () => {
+        const isDark = html.classList.toggle('dark');
+        localStorage.setItem('colorScheme', isDark ? 'dark' : 'light');
+        btn.textContent = isDark ? '☀' : '🌙';
+      });
+    })();
   </script>
 </body>
 </html>

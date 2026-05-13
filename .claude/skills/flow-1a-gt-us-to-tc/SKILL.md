@@ -71,6 +71,8 @@ If neither provided, stop immediately and report: "flow-1a-gt-us-to-tc requires 
 
 ### Phase 0 — Initialize
 
+> All shell commands in Phase 0 must use the **Bash tool** (not PowerShell).
+
 **Resume detection (run before generating a new run_id):**
 
 1. List the five most recently modified `gtc-*` dirs:
@@ -92,6 +94,8 @@ If neither provided, stop immediately and report: "flow-1a-gt-us-to-tc requires 
 > Note: For `--us-text` (pasted stories, `id="manual"`), always start a fresh run.
 
 Confirm ISSUE_TRACKER and FAKE_TRACKER_URL (or other tracker vars) are set. If missing, stop and report exactly which vars are absent — do not ask interactively.
+
+> ⚠️ Do NOT run `preflight.sh` in Phase 0. `gt-story-planner` (Phase 1) calls preflight automatically when fetching the story. Phase 0 only checks that the required env vars are non-empty.
 
 **→ Immediately continue to Phase 1.**
 
@@ -350,7 +354,7 @@ remains in artifact files on disk — access by path if needed.
 
 **Everything else continues:** log failures per item and move to the next phase.
 
-**Bash:** Run all bash commands directly (`bash .claude/skills/...`). Never prefix with `cd /path &&` or `source .env &&`. Never use `cd && source && bash` chains — they bypass the permission allowlist.
+**Bash:** Use the **Bash tool** (not PowerShell) for all bash commands (`bash .claude/skills/...`). Never prefix with `cd /path &&` or `source .env &&`. Never use `cd && source && bash` chains — they bypass the permission allowlist.
 
 **Artifact contracts:**
 - `run_id` prefix is `gtc`; use it consistently for all artifacts.

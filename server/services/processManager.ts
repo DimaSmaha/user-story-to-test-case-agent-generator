@@ -31,15 +31,14 @@ export function spawnLines(
     const parts = buf.split("\n");
     buf = parts.pop() ?? "";
     for (const line of parts) {
-      const clean = stripAnsi(line);
-      if (clean.trim()) onLine(clean);
+      if (line.trim()) onLine(line);
     }
   };
 
   proc.stdout?.on("data", handle);
   proc.stderr?.on("data", handle);
   proc.on("close", (code) => {
-    if (buf.trim()) onLine(stripAnsi(buf));
+    if (buf.trim()) onLine(buf);
     buf = "";
     onClose(code);
   });

@@ -133,6 +133,34 @@
       font-size: 0.8rem;
       color: #94a3b8;
     }
+
+    /* ─── Theme toggle button ────────────────────────────────────────────────── */
+    #theme-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #94a3b8;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    #theme-btn:hover { color: #f8fafc; }
+
+    /* ─── Dark mode overrides ────────────────────────────────────────────────── */
+    :root.dark { color-scheme: dark; }
+    .dark body { background: #0f172a; color: #e2e8f0; }
+    .dark header { background: #0f172a; }
+    .dark .hero h1 { color: #f1f5f9; }
+    .dark .hero p { color: #94a3b8; }
+    .dark .tool-card {
+      background: #1e293b; border-color: #334155; box-shadow: none;
+    }
+    .dark .tool-card:hover { border-color: #475569; box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+    .dark .tool-card .icon { background: #1e3a5f; }
+    .dark .tool-card h2 { color: #f1f5f9; }
+    .dark .tool-card p { color: #94a3b8; }
   </style>
 </head>
 <body>
@@ -141,7 +169,24 @@
       <div class="logo">QA Automation Hub</div>
       <div class="subtitle">Automated quality assurance tools</div>
     </div>
+    <button id="theme-btn" title="Toggle dark mode">🌙</button>
   </header>
+  <script>
+    (function () {
+      const html = document.documentElement;
+      const btn = document.getElementById('theme-btn');
+      function applyScheme(dark) {
+        html.classList.toggle('dark', dark);
+        btn.textContent = dark ? '☀' : '🌙';
+      }
+      applyScheme(localStorage.getItem('colorScheme') === 'dark');
+      btn.addEventListener('click', () => {
+        const isDark = html.classList.toggle('dark');
+        localStorage.setItem('colorScheme', isDark ? 'dark' : 'light');
+        btn.textContent = isDark ? '☀' : '🌙';
+      });
+    })();
+  </script>
 
   <main>
     <div class="hero">
