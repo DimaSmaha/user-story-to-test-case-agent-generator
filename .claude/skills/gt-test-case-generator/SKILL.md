@@ -16,25 +16,6 @@ emit `tc-N.json` artifacts for downstream spec writing.
 Do not paraphrase, expand, or rewrite the ideas or verifications. The script
 formats them verbatim.
 
-## When this skill fits
-
-Use it for requests like:
-
-- "create test case for scenario 2"
-- "upload test cases to the tracker"
-- "generate tc.json for this scenario"
-- "publish test cases for the cart flow"
-
-Do **not** use it for:
-
-- generating ideation (use `gt-test-ideation`)
-- writing Playwright specs (use `gt-spec-writer`)
-
-## What comes before and after
-
-- **Before:** `gt-test-ideation` produces `test-ideas.json`
-- **After:** `gt-spec-writer` reads `tc-N.json` to generate the Playwright spec
-
 ## Inputs
 
 **Required:**

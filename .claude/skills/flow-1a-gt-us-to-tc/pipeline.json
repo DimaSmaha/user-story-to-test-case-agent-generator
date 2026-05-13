@@ -23,6 +23,16 @@
       "on_failure": "stop"
     },
     {
+      "id": "phase-1.5",
+      "label": "App Exploration",
+      "skill": "playwright-cli",
+      "reads": ["us.json"],
+      "writes": ["exploration.json"],
+      "resume_skip_if": "exploration.json",
+      "on_failure": "stop",
+      "action": "load auth; explore feature area from us.json; use snapshots (no PNGs); document bugs in exploration.json with screenshot:null by default; take PNG only for confirmed bugs"
+    },
+    {
       "id": "phase-2",
       "label": "Ideation",
       "skill": "gt-test-ideation",
@@ -30,6 +40,16 @@
       "writes": ["test-ideas.json", "test-ideas.md"],
       "resume_skip_if": "test-ideas.json",
       "on_failure": "stop"
+    },
+    {
+      "id": "phase-2.5",
+      "label": "Bug Reporting",
+      "skill": "ft-bug-reporter",
+      "reads": ["exploration.json"],
+      "writes": ["bug-{i}.json"],
+      "resume_skip_if": null,
+      "on_failure": "log-and-continue",
+      "action": "if exploration.json.bugs is empty, skip; for each bug synthesize classification+repro JSON then invoke ft-bug-reporter"
     },
     {
       "id": "phase-3",
@@ -79,7 +99,9 @@
     "strategy": "emit-compact-block-then-drop",
     "phases": {
       "phase-1": { "retain": ["us_id", "title", "scenario_count"] },
+      "phase-1.5": { "retain": ["pages_visited_count", "bug_count"] },
       "phase-2": { "retain": ["total_ideas", "scenario_count"] },
+      "phase-2.5": { "retain": ["bugs_filed", "bugs_failed"] },
       "phase-3a": { "retain": ["tc_id", "scenario_index", "title", "deduped"] },
       "phase-4": { "retain": ["linked_count", "failed_count"] }
     }

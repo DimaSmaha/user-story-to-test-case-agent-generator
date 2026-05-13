@@ -12,26 +12,6 @@ description: >
 Convert a user story into `us.json` and `scenarios.md` — the planning inputs for
 downstream test ideation and spec generation.
 
-## When this skill fits
-
-Use it for requests like:
-
-- "plan test coverage for user story 112"
-- "analyze this story and list scenarios to test"
-- "what should we test for this feature?"
-- "break this story into test scenarios"
-
-Do **not** use it for:
-
-- generating test ideas or steps (use `gt-test-ideation`)
-- creating tracker test cases (use `gt-test-case-generator`)
-- writing Playwright specs (use `gt-spec-writer`)
-
-## What comes before and after
-
-- **Before:** a user story (ID from the tracker, or pasted text)
-- **After:** `gt-test-ideation` reads `us.json` and `scenarios.md`
-
 ## Inputs
 
 Either:

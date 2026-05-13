@@ -13,25 +13,6 @@ description: >
 Turn a high-confidence `app-bug` classification into a tracker bug and emit
 `bug.json` for downstream reference.
 
-## When this skill fits
-
-Use it for requests like:
-
-- "file a bug for this app-bug classification"
-- "create a tracker issue from classification.json"
-- "report this as a bug with evidence"
-
-Do **not** use it for:
-
-- `test-bug` verdicts (use `ft-test-fix-runner`)
-- low-confidence classifications (< 0.60)
-- running or classifying the test
-
-## What comes before and after
-
-- **Before:** `ft-classifier` produces `classification.json` with `verdict: "app-bug"`
-- **After:** `bug.json` is produced; the run is complete unless a human follow-up is needed
-
 ## Inputs
 
 **Required:**

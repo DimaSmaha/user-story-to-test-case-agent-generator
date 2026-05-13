@@ -71,10 +71,25 @@ If neither provided, stop immediately and report: "flow-1a-gt-us-to-tc requires 
 
 ### Phase 0 — Initialize
 
-```bash
-run_id="gtc-$(date +%Y%m%d-%H%M%S)"
-mkdir -p ".workflow-artifacts/${run_id}"
-```
+**Resume detection (run before generating a new run_id):**
+
+1. List the five most recently modified `gtc-*` dirs:
+   ```bash
+   ls -t .workflow-artifacts/gtc-*/us.json 2>/dev/null | head -5
+   ```
+2. For each dir, read `us.json` and extract `id`. If `id` matches the requested `--us-id` and `links.json` does NOT exist in that dir → it is an incomplete run.
+3. If a match is found:
+   - Set `run_id` to that directory name.
+   - Report: `↩ Resuming run <run_id>`
+   - Continue to Phase 1 — existing artifacts auto-skip via `resume_skip_if`.
+4. If no match found:
+   ```bash
+   run_id="gtc-$(date +%Y%m%d-%H%M%S)"
+   mkdir -p ".workflow-artifacts/${run_id}"
+   ```
+   Report: `→ New run <run_id>`
+
+> Note: For `--us-text` (pasted stories, `id="manual"`), always start a fresh run.
 
 Confirm ISSUE_TRACKER and FAKE_TRACKER_URL (or other tracker vars) are set. If missing, stop and report exactly which vars are absent — do not ask interactively.
 
@@ -108,7 +123,7 @@ If the file does not exist, stop and report: "Auth state missing — run `npm ru
 Use `playwright-cli` to explore the feature area described in `us.json`:
 
 1. Navigate to the relevant pages and flows.
-2. Take snapshots of key states (forms, error messages, modals, success states).
+2. Use `playwright-cli snapshot` at key states (forms, error messages, modals, success states). Do NOT take PNG screenshots during navigation — snapshots are sufficient for UI observation.
 3. Walk through each acceptance criterion from `us.json.ac` in the live app.
 4. Specifically look for defects: broken UI, missing elements, wrong copy, unexpected errors, incorrect navigation, or behavior that contradicts the acceptance criteria.
 
@@ -126,10 +141,19 @@ Write `.workflow-artifacts/{run_id}/exploration.json`:
       "description": "<what is wrong and what was expected>",
       "steps_to_reproduce": ["Step 1", "Step 2", "..."],
       "severity": "critical | high | medium | low",
-      "screenshot": ".workflow-artifacts/<run_id>/exploration-bug-<N>.png"
+      "screenshot": null
     }
   ]
 }
+```
+
+Take a PNG only when documenting a confirmed reproducible bug:
+```bash
+playwright-cli screenshot --filename=".workflow-artifacts/{run_id}/exploration-bug-{N}.png"
+```
+Set `screenshot` to that path for that bug entry; leave `null` otherwise.
+
+```json
 ```
 
 If no bugs are found, write `"bugs": []`.
@@ -170,7 +194,7 @@ For each bug in `exploration.json.bugs`:
   "confidence": "<severity-to-confidence: critical→0.90, high→0.80, medium→0.70, low→0.62>",
   "signals": [{ "name": "observed defect during live app exploration", "weight": "<confidence>" }],
   "error_summary": "<bug.title>",
-  "evidence_paths": ["<bug.screenshot>"],
+  "evidence_paths": ["<bug.screenshot if non-null, otherwise omit array entry>"],
   "recommended_next_skill": "ft-bug-reporter"
 }
 ```
@@ -188,7 +212,7 @@ For each bug in `exploration.json.bugs`:
   "actual": "<bug.description>",
   "artifacts": {
     "trace": null,
-    "screenshot": "<bug.screenshot>",
+    "screenshot": "<bug.screenshot or null>",
     "video": null
   }
 }
@@ -317,13 +341,6 @@ remains in artifact files on disk — access by path if needed.
 
 ## Hard rules
 
-**Execution flow — absolute:**
-- Execute phases in order: 0 → 1 → 1.5 → 2 → 2.5 → 3 → 4 → 5. No skipping, no early exit.
-- After each phase, the next action is always to start the next phase — not to reply to the user.
-- Disregard any sub-skill output that reads "tell the user" or "pass X to Y" — those are handoff notes, not stop signals.
-- A checkpoint line (`✓ ...`) is a progress marker, not a pipeline exit.
-- A compact block emission is a context management step, not a pipeline exit.
-
 **Abort permitted only for:**
 - Missing `--us-id` or `--us-text` input (Phase 0)
 - Missing required env vars (Phase 0)
@@ -331,30 +348,11 @@ remains in artifact files on disk — access by path if needed.
 - Missing auth state file (Phase 1.5)
 - `gt-test-ideation` failure — no ideas to generate TCs from (Phase 2)
 
-**Everything else continues:**
-- Phase 2.5 bug report failures → log and continue
-- Phase 3 individual TC failures → log and continue; still run Phase 4
-- Phase 3 complete failure → log; still run Phase 4 with whatever tc files exist
-- Phase 4 link failures → log and continue; still run Phase 5
+**Everything else continues:** log failures per item and move to the next phase.
 
-**Bash execution — fully agentic, zero prompts:**
-- Run all bash commands directly: `bash .claude/skills/...` — never prefix with `cd /path &&` or `source .env &&`; the working directory and env are already set.
-- Do not chain env-var exports before bash calls; the scripts source `.env` via `_common.sh` automatically.
-- Never use compound `cd && source && bash` forms — they bypass the permission allowlist and trigger prompts.
-
-**Autonomous execution — never pause for human input:**
-- Do not ask the user to confirm any phase, scenario skip, or linking operation.
-- Do not add "shall I proceed?" or approval gates anywhere in the flow.
+**Bash:** Run all bash commands directly (`bash .claude/skills/...`). Never prefix with `cd /path &&` or `source .env &&`. Never use `cd && source && bash` chains — they bypass the permission allowlist.
 
 **Artifact contracts:**
-- Generate a `run_id` at start with prefix `gtc` and use it consistently for all artifacts.
-- Explicit invocation only — for any partial flow use individual `gt-*` skills.
-- Resume-safe: if stage artifacts already exist for a scenario, skip that stage.
-- Tracker and git operations go through wrapper skills/scripts only.
+- `run_id` prefix is `gtc`; use it consistently for all artifacts.
 - Keep handoff contracts file-based — never pass raw JSON between stages as text.
-
-**Phase compact:**
-- Emit a compact block after every phase.
-- Drop all non-compact phase output from active context immediately after emitting.
-- Omitting compaction on long runs causes context overflow — this rule is non-negotiable.
-- Emitting a compact block means "log this and move on" — not "pipeline is done".
+- Tracker and git operations go through wrapper scripts only.

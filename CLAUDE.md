@@ -73,12 +73,13 @@ When story text is pasted directly: `"id": "manual"`, `"url": null`.
       "description": "Button is clickable before any input is entered",
       "steps_to_reproduce": ["Navigate to login page", "Leave both fields empty", "Observe Login button state"],
       "severity": "medium",
-      "screenshot": ".workflow-artifacts/gtc-20240601-143012/exploration-bug-0.png"
+      "screenshot": null
     }
   ]
 }
 ```
 `bugs` is `[]` when no defects are found. Non-empty `bugs` trigger Phase 2.5 (`ft-bug-reporter`).
+`screenshot` is `null` by default. Set to a PNG path only when a confirmed bug is documented with `playwright-cli screenshot --filename=...`.
 
 **`scenarios.md`** — written by `gt-story-planner`
 ```markdown

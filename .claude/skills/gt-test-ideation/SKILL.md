@@ -12,25 +12,6 @@ description: >
 Expand each scenario from `scenarios.md` into a fully structured ideation unit
 with conditions, ideas, verifications, navigations, and reusable helper references.
 
-## When this skill fits
-
-Use it for requests like:
-
-- "generate test ideas for these scenarios"
-- "expand scenarios into test design"
-- "create test-ideas.json from the scenario list"
-- "what steps and assertions should each scenario have?"
-
-Do **not** use it for:
-
-- creating tracker test cases (use `gt-test-case-generator`)
-- writing Playwright code (use `gt-spec-writer`)
-
-## What comes before and after
-
-- **Before:** `gt-story-planner` produces `us.json` and `scenarios.md`
-- **After:** `gt-test-case-generator` reads `test-ideas.json`
-
 ## Inputs
 
 **Required:** `us.json` and `scenarios.md` from `gt-story-planner`
