@@ -52,10 +52,20 @@
       "action": "if exploration.json.bugs is empty, skip; for each bug synthesize classification+repro JSON then invoke ft-bug-reporter"
     },
     {
+      "id": "phase-2.7",
+      "label": "TC Reconciliation",
+      "skill": "gt-tc-reconciler",
+      "reads": ["test-ideas.json"],
+      "writes": ["existing-tcs.json", "reconciliation.json"],
+      "resume_skip_if": "reconciliation.json",
+      "on_failure": "log-and-continue",
+      "action": "fetch existing linked TCs via get-linked-tcs.sh; if none found skip immediately; otherwise compare with test-ideas.json via build-reconciliation.sh and write reconciliation.json with per-scenario action and obsolete list"
+    },
+    {
       "id": "phase-3",
       "label": "Batch TC Generation",
       "skill": null,
-      "reads": ["test-ideas.json"],
+      "reads": ["test-ideas.json", "reconciliation.json"],
       "writes": [],
       "on_failure": "log-and-continue",
       "loop": {
@@ -74,6 +84,16 @@
           }
         ]
       }
+    },
+    {
+      "id": "phase-3.5",
+      "label": "Tag Obsolete TCs",
+      "skill": "gt-tc-reconciler",
+      "reads": ["reconciliation.json"],
+      "writes": [],
+      "resume_skip_if": null,
+      "on_failure": "log-and-continue",
+      "action": "for each obsolete_tracker_id in reconciliation.json call update.sh --tag claude-generated-obsolete; skip silently if reconciliation.json absent"
     },
     {
       "id": "phase-4",
@@ -102,7 +122,9 @@
       "phase-1.5": { "retain": ["pages_visited_count", "bug_count"] },
       "phase-2": { "retain": ["total_ideas", "scenario_count"] },
       "phase-2.5": { "retain": ["bugs_filed", "bugs_failed"] },
-      "phase-3a": { "retain": ["tc_id", "scenario_index", "title", "deduped"] },
+      "phase-2.7": { "retain": ["existing_tc_count", "match_count", "obsolete_count"] },
+      "phase-3a": { "retain": ["tc_id", "scenario_index", "title", "deduped", "reused"] },
+      "phase-3.5": { "retain": ["obsolete_tagged_count", "obsolete_failed_count"] },
       "phase-4": { "retain": ["linked_count", "failed_count"] }
     }
   }

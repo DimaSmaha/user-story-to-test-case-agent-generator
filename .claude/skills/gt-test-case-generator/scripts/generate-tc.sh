@@ -82,20 +82,58 @@ XML_FILE="${RUN_DIR}/tc-steps-${INDEX}.xml"
   printf '</steps>\n'
 } > "$XML_FILE"
 
+# --- Reconciliation check ---
+RECON_FILE="${RUN_DIR}/reconciliation.json"
+matched_tracker_id=""
+action="create"
+
+if [[ -f "$RECON_FILE" ]]; then
+  action="$(jq -r --argjson idx "$INDEX" \
+    '.scenario_matches[] | select(.scenario_index == $idx) | .action // "create"' \
+    "$RECON_FILE" 2>/dev/null || printf 'create')"
+  matched_tracker_id="$(jq -r --argjson idx "$INDEX" \
+    '.scenario_matches[] | select(.scenario_index == $idx) | .matched_tracker_id // ""' \
+    "$RECON_FILE" 2>/dev/null || printf '')"
+  # guard: if action=update but id is missing or null string, fall back to create
+  if [[ "$action" == "update" && ( -z "$matched_tracker_id" || "$matched_tracker_id" == "null" ) ]]; then
+    action="create"
+  fi
+fi
+
 # --- Upload to tracker ---
 # Run preflight (idempotent — re-running is safe)
 bash "${TRACKER_SCRIPTS}/preflight.sh" > /dev/null
 
-create_response="$(bash "${TRACKER_SCRIPTS}/create.sh" \
-  --type "Test Case" \
-  --title "$title" \
-  --description-file "$MD_FILE" \
-  --parent "$US_ID" \
-  --tag "automated,claude-generated" \
-  --dedupe-by title)"
+reused="false"
+if [[ "$action" == "update" ]]; then
+  if bash "${TRACKER_SCRIPTS}/update-steps.sh" \
+       --id "$matched_tracker_id" \
+       --steps-file "$XML_FILE" \
+       --replace > /dev/null 2>&1 \
+     && bash "${TRACKER_SCRIPTS}/update.sh" \
+          --id "$matched_tracker_id" \
+          --tag "claude-generated,claude-generated-modified" > /dev/null 2>&1; then
+    tracker_id="\"${matched_tracker_id}\""
+    deduped="true"
+    reused="true"
+  else
+    printf '[WARN] generate-tc: update failed for %s — falling back to create\n' "$matched_tracker_id" >&2
+    action="create"
+  fi
+fi
 
-tracker_id="$(jq '.id' <<< "$create_response")"
-deduped="$(jq '.deduped' <<< "$create_response")"
+if [[ "$action" == "create" ]]; then
+  create_response="$(bash "${TRACKER_SCRIPTS}/create.sh" \
+    --type "Test Case" \
+    --title "$title" \
+    --description-file "$MD_FILE" \
+    --parent "$US_ID" \
+    --tag "automated,claude-generated" \
+    --dedupe-by title)"
+  tracker_id="$(jq '.id' <<< "$create_response")"
+  deduped="$(jq '.deduped' <<< "$create_response")"
+  reused="false"
+fi
 
 # --- Write tc.json ---
 local_id="tc-$(date +%s)-${RANDOM}"
@@ -104,6 +142,7 @@ jq -n \
   --arg id "$local_id" \
   --argjson tracker_id "$tracker_id" \
   --argjson deduped "$deduped" \
+  --argjson reused "$reused" \
   --arg title "$title" \
   --arg us_id "$US_ID" \
   --arg xml_path "$XML_FILE" \
@@ -125,7 +164,8 @@ jq -n \
     navigations: ($scenario.navigations // []),
     ac_trace: ($scenario.ac_trace // []),
     reusable_helpers: ($scenario.reusable_helpers // []),
-    deduped: $deduped
+    deduped: $deduped,
+    reused: $reused
   }' > "$TC_JSON"
 
 cat "$TC_JSON"

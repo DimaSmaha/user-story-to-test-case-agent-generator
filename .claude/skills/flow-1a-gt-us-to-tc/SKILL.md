@@ -23,7 +23,7 @@ Run Pipeline A-1: planner → ideation → batch TC generation → link TCs to s
 **The pipeline MUST execute every phase in sequence without stopping.**
 
 ```
-Phase 0 → Phase 1 → Phase 1.5 → Phase 2 → Phase 2.5 → Phase 3 → Phase 4 → Phase 5
+Phase 0 → Phase 1 → Phase 1.5 → Phase 2 → Phase 2.5 → Phase 2.7 → Phase 3 → Phase 3.5 → Phase 4 → Phase 5
 ```
 
 - **Never stop between phases.** After any phase completes (success, skip, or non-critical failure), immediately begin the next phase.
@@ -231,6 +231,40 @@ Show checkpoint: `✓ Bugs reported: N bugs filed, M failed`
 
 ---
 
+### Phase 2.7 — TC Reconciliation (`gt-tc-reconciler`)
+
+**Resume-skip:** if `reconciliation.json` already exists in `{run_dir}`, skip this phase and **immediately continue to Phase 3**.
+
+**Step 1 — Fetch existing linked TCs:**
+
+```bash
+bash .claude/skills/gt-tc-reconciler/scripts/fetch-existing-tcs.sh \
+  --us-id <us_id> \
+  --run-dir ".workflow-artifacts/<run_id>"
+```
+
+Read stdout:
+- `status: "skipped"` → log the reason (e.g. `No existing linked TCs — skipping reconciliation`) → **immediately continue to Phase 3** (do NOT run Step 2)
+- `status: "found"` → `existing-tcs.json` was written → proceed to Step 2
+
+**Step 2 — Build reconciliation plan:**
+
+```bash
+bash .claude/skills/gt-tc-reconciler/scripts/build-reconciliation.sh \
+  --run-dir ".workflow-artifacts/<run_id>"
+```
+
+Writes `reconciliation.json`. Phase 3 (`generate-tc.sh`) reads it automatically.
+
+- **SUCCESS / SKIPPED:** emit compact block → **immediately continue to Phase 3**
+- **FAILED:** log failure → continue to Phase 3 (generate-tc.sh falls back to create-only since reconciliation.json is absent)
+
+Show checkpoint: `✓ TC reconciliation: N existing matched, M to create, K obsolete`
+
+> **This phase NEVER aborts the pipeline.**
+
+---
+
 ### Phase 3 — Batch TC generation (`gt-test-case-generator`)
 
 Invoke `gt-test-case-generator` **once** with `--scenario-index all`. This calls `batch-generate-tc.sh` internally, which is resume-safe and handles every non-SKIP scenario in a single run.
@@ -247,6 +281,24 @@ Skill: gt-test-case-generator  args: --run-id <run_id> --scenario-index all
 Show checkpoint: `✓ Test cases generated: N / M scenarios`
 
 > **After this checkpoint, do NOT stop. Phase 4 (linking) still remains.**
+
+---
+
+### Phase 3.5 — Tag Obsolete TCs (`gt-tc-reconciler`)
+
+```bash
+bash .claude/skills/gt-tc-reconciler/scripts/tag-obsolete.sh \
+  --run-dir ".workflow-artifacts/<run_id>"
+```
+
+- If `reconciliation.json` absent → script exits with `status: "skipped"` → log and **immediately continue to Phase 4**
+- Applies `claude-generated-obsolete` tag to each tracker ID in `reconciliation.json.obsolete_tracker_ids`
+
+- **SUCCESS / SKIPPED / PARTIAL:** emit compact block → **immediately continue to Phase 4**
+
+Show checkpoint: `✓ Obsolete TCs tagged: N tagged, M failed`
+
+> **This phase NEVER aborts the pipeline.**
 
 ---
 
@@ -292,14 +344,14 @@ Show checkpoint: `✓ TCs linked to story {us_id}: N linked, M skipped, K failed
 Output a table:
 
 ```
-| # | Scenario                                | TC ID           | Tracker ID  | Link Status |
-|---|-----------------------------------------|-----------------|-------------|-------------|
-| 0 | [P1] Auth: Login with valid credentials | tc-1234567890   | TEST-57041  | linked      |
-| 1 | [P1] Auth: Login with invalid password  | tc-1234567891   | TEST-57042  | linked      |
-| 2 | [SKIP] Auth: Logout flow                | —               | —           | skipped     |
+| # | Scenario                                | TC ID           | Tracker ID  | Reused | Link Status |
+|---|-----------------------------------------|-----------------|-------------|--------|-------------|
+| 0 | [P1] Auth: Login with valid credentials | tc-1234567890   | TEST-57041  | yes    | linked      |
+| 1 | [P1] Auth: Login with invalid password  | tc-1234567891   | TEST-57042  | no     | linked      |
+| 2 | [SKIP] Auth: Logout flow                | —               | —           | —      | skipped     |
 
 Run ID: gtc-20240601-143012
-Total: 3 scenarios | 2 TCs created | 2 linked to story {us_id} | 1 skipped
+Total: 3 scenarios | 1 modified | 1 created | K obsolete tagged | 2 linked to story {us_id} | 1 skipped
 Next: run flow-1b-gt-tc-to-spec --run-id gtc-20240601-143012 to generate Playwright specs
 ```
 
@@ -335,7 +387,9 @@ After each phase completes, emit a compact JSON block and drop all full phase ou
 | App exploration (1.5) | `pages_visited_count`, `bug_count` |
 | gt-test-ideation (2) | `total_ideas`, `scenario_count` |
 | Bug reporting (2.5) | `bugs_filed`, `bugs_failed` |
+| TC Reconciliation (2.7) | `existing_tc_count`, `match_count`, `obsolete_count` |
 | gt-test-case-generator (3) | `tc_count`, `failed_count` |
+| Tag Obsolete TCs (3.5) | `obsolete_tagged_count`, `obsolete_failed_count` |
 | Link TCs to Story (4) | `linked_count`, `failed_count` |
 
 All other data (ideation arrays, tracker API responses, full error stacks)
