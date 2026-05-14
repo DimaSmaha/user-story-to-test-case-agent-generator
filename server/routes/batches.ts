@@ -1,8 +1,6 @@
 import { Router } from "express";
-import * as crypto from "crypto";
-import { batches, serializeBatch } from "../services/batchStore";
+import { batches, serializeBatch, createBatch } from "../services/batchStore";
 import { runBatch, cancelBatch, cancelJob } from "../services/batchRunner";
-import type { Batch, Job, JobStatus } from "../types";
 
 const router = Router();
 
@@ -13,33 +11,7 @@ router.post("/api/batches", (req, res) => {
     return;
   }
 
-  const batch: Batch = {
-    id: crypto.randomUUID(),
-    storyIds,
-    status: "running",
-    startedAt: Date.now(),
-    endedAt: null,
-    authLogs: [],
-    authStatus: "running",
-    authProcess: null,
-    jobs: new Map(
-      storyIds.map((id) => [
-        id,
-        {
-          storyId: id,
-          status: "pending" as JobStatus,
-          startedAt: null,
-          endedAt: null,
-          pipelineLogs: [],
-          process: null,
-          timeoutHandle: null,
-        } satisfies Job,
-      ]),
-    ),
-    sseClients: new Set(),
-    timeoutHandle: null,
-  };
-
+  const batch = createBatch(storyIds);
   batches.set(batch.id, batch);
   runBatch(batch);
   res.json({ id: batch.id, batch: serializeBatch(batch) });

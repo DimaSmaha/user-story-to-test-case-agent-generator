@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { batches } from "../services/batchStore";
+import { formatSSEMessage } from "../services/sseManager";
 
 const router = Router();
 
@@ -18,23 +19,19 @@ router.get("/api/batches/:id/stream", (req, res) => {
 
   // Replay existing state for late-joining clients
   for (const line of batch.authLogs) {
-    res.write(`event: log\ndata: ${JSON.stringify({ block: "auth", text: line })}\n\n`);
+    res.write(formatSSEMessage("log", { block: "auth", text: line }));
   }
-  res.write(`event: auth-status\ndata: ${JSON.stringify({ status: batch.authStatus })}\n\n`);
+  res.write(formatSSEMessage("auth-status", { status: batch.authStatus }));
 
   for (const job of batch.jobs.values()) {
-    res.write(
-      `event: job-status\ndata: ${JSON.stringify({ storyId: job.storyId, status: job.status, startedAt: job.startedAt })}\n\n`,
-    );
+    res.write(formatSSEMessage("job-status", { storyId: job.storyId, status: job.status, startedAt: job.startedAt }));
     for (const line of job.pipelineLogs) {
-      res.write(
-        `event: log\ndata: ${JSON.stringify({ block: "pipeline", storyId: job.storyId, text: line })}\n\n`,
-      );
+      res.write(formatSSEMessage("log", { block: "pipeline", storyId: job.storyId, text: line }));
     }
   }
 
   if (batch.status !== "running") {
-    res.write(`event: batch-done\ndata: ${JSON.stringify({ status: batch.status })}\n\n`);
+    res.write(formatSSEMessage("batch-done", { status: batch.status }));
     res.end();
     return;
   }

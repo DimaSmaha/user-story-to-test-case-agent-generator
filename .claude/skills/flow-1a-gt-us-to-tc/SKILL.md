@@ -171,14 +171,16 @@ Checkpoint: `✓ TC reconciliation: N existing matched, M to create, K obsolete`
 
 ### Phase 3 — Batch TC generation (`gt-test-case-generator`)
 
-Invoke `gt-test-case-generator` **once** with `--scenario-index all`:
+Invoke `gt-test-case-generator` with `--scenario-index all`. **Do NOT run as a background process — wait synchronously for each invocation to complete.**
 ```
 Skill: gt-test-case-generator  args: --run-id <run_id> --scenario-index all
 ```
 
+After the skill returns, count `tc-*.json` files present in `{run_dir}`. If the count is less than `scenario_count` (from Phase 2 compact), re-invoke `gt-test-case-generator` with the same arguments — the batch script is resume-safe and skips already-created files. Repeat up to **3 invocations total**.
+
 - Resume-skip: batch script skips indices where `tc-{index}.json` already exists
 - Individual scenario failure → logged per scenario, pipeline continues
-- Entire skill failure → log → continue to Phase 4 with whatever tc files exist
+- All 3 invocations exhausted with missing TCs → log → continue to Phase 4 with whatever tc files exist
 
 Checkpoint: `✓ Test cases generated: N / M scenarios`
 

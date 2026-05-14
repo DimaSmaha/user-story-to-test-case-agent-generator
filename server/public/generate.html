@@ -356,6 +356,43 @@
       color: #64748b;
     }
 
+    /* ─── API key modal ─────────────────────────────────────────────────────── */
+    #api-key-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    #api-key-modal > div {
+      background: #fff; border-radius: 12px; padding: 2rem;
+      width: 100%; max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    #api-key-modal h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; }
+    #api-key-modal p  { font-size: 0.875rem; color: #64748b; margin-bottom: 1rem; }
+    #api-key-input {
+      width: 100%; padding: 0.6rem 0.85rem;
+      border: 1px solid #cbd5e1; border-radius: 7px;
+      font-size: 0.9rem; margin-bottom: 0.5rem; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #api-key-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    #api-key-error { display: none; color: #ef4444; font-size: 0.8rem; margin-bottom: 0.75rem; }
+    #api-key-submit {
+      width: 100%; padding: 0.65rem;
+      background: #2563eb; color: #fff; border: none;
+      border-radius: 7px; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #api-key-submit:hover { background: #1d4ed8; }
+
+    /* ─── API key header button ──────────────────────────────────────────────── */
+    #api-key-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; color: #94a3b8; padding: 0.25rem;
+      line-height: 1; transition: color 0.15s;
+    }
+    #api-key-btn:hover { color: #f8fafc; }
+
     /* ─── Theme toggle button ────────────────────────────────────────────────── */
     #theme-btn {
       margin-left: auto;
@@ -427,6 +464,10 @@
     .dark #cancel-modal-dismiss {
       background: #0f172a; border-color: #334155; color: #94a3b8;
     }
+    .dark #api-key-modal > div { background: #1e293b; color: #e2e8f0; }
+    .dark #api-key-modal p { color: #94a3b8; }
+    .dark #api-key-input { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+    .dark #api-key-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
   </style>
 </head>
 <body>
@@ -434,6 +475,7 @@
     <a href="/" class="back-link">&#8592; Home</a>
     <span class="header-sep">/</span>
     <h1>Test Case Generator</h1>
+    <button id="api-key-btn" title="Change API key">🔑</button>
     <button id="theme-btn" title="Toggle dark mode">🌙</button>
   </header>
 
@@ -501,6 +543,17 @@
     </div>
   </div>
 
+  <!-- API Key modal -->
+  <div id="api-key-modal">
+    <div>
+      <h2>API Key Required</h2>
+      <p>Enter the key to connect to the server. It will be saved in your browser.</p>
+      <input id="api-key-input" type="password" placeholder="Paste your API key" autocomplete="off" />
+      <div id="api-key-error"></div>
+      <button id="api-key-submit">Connect</button>
+    </div>
+  </div>
+
   <!-- Cancel confirm modal -->
   <div id="cancel-modal-backdrop" style="
     display:none; position:fixed; inset:0;
@@ -534,10 +587,70 @@
     const batchStartTimes = new Map(); // batchId -> number
     const jobStartTimes = new Map();   // `${batchId}:${storyId}` -> number
 
+    // ─── API Key auth ──────────────────────────────────────────────────────────
+    const APIKEY_STORAGE = 'qa_hub_api_key';
+
+    function getApiKey() { return localStorage.getItem(APIKEY_STORAGE) || ''; }
+
+    async function apiFetch(url, opts = {}) {
+      const key = getApiKey();
+      const headers = { ...(opts.headers || {}) };
+      if (key) headers['X-API-Key'] = key;
+      const r = await fetch(url, { ...opts, headers });
+      if (r.status === 401) showApiKeyModal('API key invalid or expired. Please re-enter.');
+      return r;
+    }
+
+    // EventSource can't set headers — pass key as query param instead
+    function sseUrl(path) {
+      const key = getApiKey();
+      return key ? `${path}?apiKey=${encodeURIComponent(key)}` : path;
+    }
+
+    function showApiKeyModal(error) {
+      const errEl = document.getElementById('api-key-error');
+      errEl.textContent = error || '';
+      errEl.style.display = error ? '' : 'none';
+      document.getElementById('api-key-modal').style.display = 'flex';
+      document.getElementById('api-key-input').focus();
+    }
+
+    function hideApiKeyModal() {
+      document.getElementById('api-key-modal').style.display = 'none';
+    }
+
+    document.getElementById('api-key-btn').addEventListener('click', () => showApiKeyModal());
+
+    document.getElementById('api-key-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('api-key-submit').click();
+    });
+
+    document.getElementById('api-key-submit').addEventListener('click', async () => {
+      const key = document.getElementById('api-key-input').value.trim();
+      const headers = key ? { 'X-API-Key': key } : {};
+      try {
+        const r = await fetch('/api/config', { headers });
+        if (r.status === 401) {
+          document.getElementById('api-key-error').textContent = 'Invalid key. Try again.';
+          document.getElementById('api-key-error').style.display = '';
+          return;
+        }
+        localStorage.setItem(APIKEY_STORAGE, key);
+        const c = await r.json().catch(() => ({}));
+        trackerBaseUrl = c.trackerUrl ?? '';
+        hideApiKeyModal();
+        await loadBatches();
+      } catch {
+        document.getElementById('api-key-error').textContent = 'Could not reach server.';
+        document.getElementById('api-key-error').style.display = '';
+      }
+    });
+
     // ─── Config ────────────────────────────────────────────────────────────────
     async function loadConfig() {
       try {
-        const r = await fetch('/api/config');
+        const r = await apiFetch('/api/config');
+        if (!r.ok) return;
         const c = await r.json();
         trackerBaseUrl = c.trackerUrl ?? '';
       } catch { /* ignore */ }
@@ -688,11 +801,12 @@
 
     // ─── API ───────────────────────────────────────────────────────────────────
     async function submitGenerate(storyIds) {
-      const r = await fetch('/api/batches', {
+      const r = await apiFetch('/api/batches', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ storyIds }),
       });
+      if (!r.ok) return;
       const { id, batch } = await r.json();
       batchStartTimes.set(id, batch.startedAt);
       renderBatch(batch);
@@ -700,19 +814,19 @@
     }
 
     async function cancelBatch(batchId) {
-      await fetch(`/api/batches/${batchId}`, { method: 'DELETE' });
+      await apiFetch(`/api/batches/${batchId}`, { method: 'DELETE' });
     }
 
     async function cancelJob(batchId, storyId) {
-      await fetch(`/api/batches/${batchId}/jobs/${storyId}`, { method: 'DELETE' });
+      await apiFetch(`/api/batches/${batchId}/jobs/${storyId}`, { method: 'DELETE' });
     }
 
     async function cancelAll() {
-      await fetch('/api/batches', { method: 'DELETE' });
+      await apiFetch('/api/batches', { method: 'DELETE' });
     }
 
     async function clearBatch(batchId) {
-      await fetch(`/api/batches/${batchId}/clear`, { method: 'DELETE' });
+      await apiFetch(`/api/batches/${batchId}/clear`, { method: 'DELETE' });
       const card = document.querySelector(`.batch-card[data-batch-id="${batchId}"]`);
       if (card) card.remove();
       if (document.querySelectorAll('.batch-card').length === 0) {
@@ -724,7 +838,7 @@
 
     // ─── SSE ───────────────────────────────────────────────────────────────────
     function subscribeSSE(batchId) {
-      const es = new EventSource(`/api/batches/${batchId}/stream`);
+      const es = new EventSource(sseUrl(`/api/batches/${batchId}/stream`));
 
       es.addEventListener('log', e => {
         const { block, storyId, text } = JSON.parse(e.data);
@@ -955,7 +1069,8 @@
     // ─── Load existing batches on page load ────────────────────────────────────
     async function loadBatches() {
       try {
-        const r = await fetch('/api/batches');
+        const r = await apiFetch('/api/batches');
+        if (!r.ok) return;
         const list = await r.json();
         // iterate oldest-first so prepend gives newest-at-top
         for (const batch of list) {
@@ -1020,7 +1135,17 @@
     }
 
     // ─── Init ──────────────────────────────────────────────────────────────────
-    loadConfig().then(loadBatches);
+    // Probe /api/config first; if 401 the modal appears and loadBatches runs after key is set.
+    (async function init() {
+      try {
+        const key = getApiKey();
+        const r = await fetch('/api/config', key ? { headers: { 'X-API-Key': key } } : {});
+        if (r.status === 401) { showApiKeyModal(); return; }
+        const c = await r.json().catch(() => ({}));
+        trackerBaseUrl = c.trackerUrl ?? '';
+        await loadBatches();
+      } catch { /* server unreachable — fail silently */ }
+    })();
 
     // ─── Dark mode toggle ──────────────────────────────────────────────────────
     (function () {

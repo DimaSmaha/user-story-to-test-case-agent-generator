@@ -1,0 +1,16 @@
+services:
+  app:
+    build:
+      context: .
+      target: builder
+    command: npx tsx --watch server/local.ts
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+      # Isolate container node_modules from the host
+      - /app/node_modules
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development

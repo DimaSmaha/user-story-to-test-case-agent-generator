@@ -2,28 +2,44 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Commands
+## Server Commands
 
 ```bash
-npm test                        # Run all Playwright tests (headless, 3 browsers)
-npm run test:headed             # Run tests in headed Chromium only
-npx playwright test <file>      # Run a single spec file
-npx playwright test --ui        # Open Playwright UI mode
-npm run generate:pdf            # Convert JUnit XML → PDF report (post-test)
+npm run dev                     # Start server with hot reload (tsx --watch) — port 4000
+npm run server                  # Start server once, no watch
+npm run build                   # Compile TypeScript to dist/
+npm start                       # Run compiled build (dist/server/production.js)
+npm run auth                    # Playwright login — saves .playwright-auth/auth.json
+npm run us:to:tc <story-id>     # Run full pipeline for a story via Claude Agent SDK
+npm run typecheck               # TypeScript type check (no emit)
+npm run lint                    # ESLint on server/, scripts/, helpers/
+npm run format                  # Prettier on server/, scripts/, helpers/
 ```
 
-CI runs `npx playwright test` then `npm run generate:pdf`. Reports land in `playwright-report/` (HTML) and `junitreports/` (XML).
+Docker:
+
+```bash
+npm run docker:dev              # Containerised dev with hot reload
+npm run docker:build            # Build production image (us-tc-generator:latest)
+docker compose -f docker-compose.prod.yml up -d   # Start prod stack (app + nginx on :80)
+docker compose -f docker-compose.prod.yml down    # Stop prod stack
+```
 
 ## Environment
 
-Copy `.env` values before running agentic skills. Required vars:
+Copy `.env.sample` to `.env` before running the server or any skills.
+
+Required vars:
 
 | Var | Purpose |
 |---|---|
-| `ISSUE_TRACKER` | `fake` \| `github` \| `jira` \| `ado` \| `linear` |
-| `FAKE_TRACKER_URL` | `http://localhost:3000` (or ngrok URL) when `ISSUE_TRACKER=fake` |
-| `GITHUB_TOKEN` | GitHub API auth (GitHub issues) |
-| `REPO_OWNER` / `REPO_NAME` | Artifact links |
+| `ISSUE_TRACKER` | `fake` \| `github` \| `jira` \| `ado` \| `linear` — validated at startup |
+| `FAKE_TRACKER_URL` | `http://localhost:3000` (or ngrok URL) — **only required when `ISSUE_TRACKER=fake`** |
+| `APP_URL` | Target app URL for Playwright (e.g. `https://www.saucedemo.com`) |
+| `APP_USERNAME` / `APP_PASSWORD` | Credentials used by `helpers/auth.ts` |
+| `API_KEY` | Optional — if set, all `/api/*` routes require `X-API-Key` header |
+| `SERVER_PORT` | Default `4000` |
+| `JOB_TIMEOUT_MS` / `BATCH_TIMEOUT_MS` | Default 40 min / 60 min |
 
 Skills source `.env` automatically via `_common.sh`. The fake tracker server must be running separately before using `ISSUE_TRACKER=fake`.
 
@@ -211,6 +227,17 @@ bash .claude/skills/operations-with-issue-tracker/scripts/create.sh \
 ```
 
 Scripts emit JSON only to stdout. Create returns `{"id":0,...}` on the fake tracker (expected, not an error).
+
+> **Windows fallback:** if `bash` is not in PATH, set `GIT_BASH` in `.env` and invoke scripts as:
+> ```powershell
+> $bash = if ($env:GIT_BASH) { $env:GIT_BASH } else { "C:\Program Files\Git\usr\bin\bash.exe" }
+> & $bash "-c" "bash .claude/skills/operations-with-issue-tracker/scripts/preflight.sh"
+> ```
+> If `playwright-cli` and `npx` are both unavailable, set `NODE_EXE` in `.env` and invoke directly:
+> ```powershell
+> $node = if ($env:NODE_EXE) { $env:NODE_EXE } else { "C:\Program Files\nodejs\node.exe" }
+> & $node "node_modules\@playwright\cli\playwright-cli.js" <command>
+> ```
 
 ### Tests and pages
 

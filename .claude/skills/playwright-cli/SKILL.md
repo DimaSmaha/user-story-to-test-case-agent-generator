@@ -223,6 +223,15 @@ npx playwright-cli open https://example.com
 npx playwright-cli click e1
 ```
 
+If `npx` is also unavailable (e.g. Node.js bin dir is not in PATH), set `NODE_EXE` in `.env` and invoke the local script directly:
+
+```powershell
+$node = if ($env:NODE_EXE) { $env:NODE_EXE } else { "C:\Program Files\nodejs\node.exe" }
+& $node "node_modules\@playwright\cli\playwright-cli.js" open
+& $node "node_modules\@playwright\cli\playwright-cli.js" goto https://example.com
+& $node "node_modules\@playwright\cli\playwright-cli.js" snapshot
+```
+
 ## Example: Form submission
 
 ```bash

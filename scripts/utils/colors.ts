@@ -111,9 +111,10 @@ export function printFinalSummary(
     }
   }
 
-  const tcCount = phaseCompacts.filter(
+  const tcBlock = phaseCompacts.find(
     (p) => p.phase === "gt-test-case-generator" && p.status === "SUCCESS",
-  ).length;
+  );
+  const tcCount = tcBlock ? Number(tcBlock["tc_count"] ?? 0) : 0;
   const explorationBlock = phaseCompacts.find(
     (p) =>
       p.phase === "App exploration" ||

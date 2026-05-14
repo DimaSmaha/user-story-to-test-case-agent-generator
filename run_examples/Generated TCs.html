@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Cases — Story #114 ProductDetails</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .back-link {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: #f8fafc; }
+    .header-sep { color: #475569; }
+    header h1 { font-size: 1rem; font-weight: 600; }
+    #theme-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #94a3b8;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    #theme-btn:hover { color: #f8fafc; }
+
+    /* Layout */
+    main {
+      flex: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      width: 100%;
+    }
+
+    /* Summary bar */
+    .summary-bar {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .summary-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      flex: 1;
+    }
+    .summary-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .summary-stat strong { color: #1e293b; font-size: 0.95rem; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+    }
+    .controls h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .btn-toggle-all {
+      padding: 0.35rem 0.85rem;
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-toggle-all:hover { background: #f1f5f9; }
+
+    /* Story card */
+    .story-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .story-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .story-card-header:hover { background: #f1f5f9; }
+    .story-id-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      background: #eff6ff;
+      color: #2563eb;
+      flex-shrink: 0;
+    }
+    .story-type-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.18rem 0.5rem;
+      border-radius: 20px;
+      background: #f0fdf4;
+      color: #16a34a;
+      flex-shrink: 0;
+    }
+    .story-card-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1e293b;
+      flex: 1;
+    }
+    .story-card-body {
+      padding: 1rem 1.25rem;
+    }
+    .story-card.collapsed .story-card-body { display: none; }
+    .story-card.collapsed .toggle-icon { transform: rotate(-90deg); }
+    .story-description {
+      font-size: 0.845rem;
+      color: #475569;
+      line-height: 1.65;
+    }
+
+    /* TC list */
+    .tc-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    /* TC card */
+    .tc-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+
+    .tc-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.1rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+    .tc-header:hover { background: #f1f5f9; }
+
+    .tc-num {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #94a3b8;
+      min-width: 1.8rem;
+    }
+
+    .tc-title {
+      font-size: 0.855rem;
+      font-weight: 600;
+      color: #1e293b;
+      flex: 1;
+      line-height: 1.4;
+    }
+
+    .toggle-icon {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+    .tc-card.collapsed .toggle-icon { transform: rotate(-90deg); }
+
+    /* Badge */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .badge-p1 { background: #eff6ff; color: #2563eb; }
+    .badge-p2 { background: #fffbeb; color: #b45309; }
+    .badge-p3 { background: #f1f5f9; color: #64748b; }
+
+    /* TC body / steps */
+    .tc-body {
+      padding: 0.85rem 1.1rem 1rem;
+    }
+    .tc-card.collapsed .tc-body { display: none; }
+
+    .steps-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .steps-table tr:nth-child(odd) { background: #f8fafc; }
+    .steps-table tr:nth-child(even) { background: #fff; }
+
+    .step-cell {
+      padding: 0.45rem 0.75rem;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    .step-num {
+      width: 2rem;
+      color: #94a3b8;
+      font-weight: 600;
+      font-size: 0.75rem;
+      padding-top: 0.5rem;
+      text-align: right;
+      white-space: nowrap;
+    }
+    .step-action {
+      color: #1e293b;
+      font-weight: 500;
+    }
+    .step-expected {
+      color: #475569;
+      padding-left: 1.5rem;
+      font-style: italic;
+      font-size: 0.78rem;
+    }
+    .expected-label {
+      font-weight: 600;
+      color: #94a3b8;
+      font-style: normal;
+      margin-right: 0.3rem;
+    }
+
+    /* Dark mode */
+    :root.dark { color-scheme: dark; }
+    .dark body { background: #0f172a; color: #e2e8f0; }
+    .dark header { background: #0f172a; }
+
+    .dark .summary-bar,
+    .dark .tc-card { background: #1e293b; border-color: #334155; box-shadow: none; }
+    .dark .summary-title { color: #f1f5f9; }
+    .dark .summary-stat { color: #64748b; }
+    .dark .summary-stat strong { color: #e2e8f0; }
+
+    .dark .controls h2 { color: #f1f5f9; }
+    .dark .btn-toggle-all { border-color: #475569; color: #94a3b8; }
+    .dark .btn-toggle-all:hover { background: #334155; }
+
+    .dark .tc-header { background: #1e293b; border-color: #334155; }
+    .dark .tc-header:hover { background: #263148; }
+    .dark .tc-title { color: #f1f5f9; }
+
+    .dark .badge-p1 { background: #1e3a5f; color: #60a5fa; }
+    .dark .badge-p2 { background: #451a03; color: #fb923c; }
+    .dark .badge-p3 { background: #1e293b; color: #94a3b8; }
+
+    .dark .story-card { background: #1e293b; border-color: #334155; box-shadow: none; }
+    .dark .story-card-header { background: #1e293b; border-color: #334155; }
+    .dark .story-card-header:hover { background: #263148; }
+    .dark .story-card-title { color: #f1f5f9; }
+    .dark .story-id-badge { background: #1e3a5f; color: #60a5fa; }
+    .dark .story-type-badge { background: #14532d; color: #4ade80; }
+    .dark .story-description { color: #94a3b8; }
+
+    .dark .steps-table tr:nth-child(odd) { background: #1e293b; }
+    .dark .steps-table tr:nth-child(even) { background: #172033; }
+    .dark .step-action { color: #e2e8f0; }
+    .dark .step-expected { color: #94a3b8; }
+    .dark .expected-label { color: #475569; }
+    .dark .step-num { color: #475569; }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="javascript:history.back()" class="back-link">&#8592; Back</a>
+    <span class="header-sep">/</span>
+    <h1>Story #114 &mdash; ProductDetails: Generated Test Cases</h1>
+    <button id="theme-btn" title="Toggle dark mode">&#9788;</button>
+  </header>
+
+  <main>
+    <!-- Summary -->
+    <div class="summary-bar">
+      <span class="summary-title">ProductDetails &mdash; Enable product details navigation from inventory with consistent cart behavior</span>
+      <span class="summary-stat"><strong>15</strong> test cases</span>
+      <span class="summary-stat badge badge-p1">P1 &nbsp;<strong>8</strong></span>
+      <span class="summary-stat badge badge-p2">P2 &nbsp;<strong>4</strong></span>
+      <span class="summary-stat badge badge-p3">P3 &nbsp;<strong>3</strong></span>
+    </div>
+
+    <!-- User Story -->
+    <div class="story-card" id="story-card">
+      <div class="story-card-header" onclick="document.getElementById('story-card').classList.toggle('collapsed')">
+        <span class="story-id-badge">#114</span>
+        <span class="story-type-badge">Story</span>
+        <span class="story-card-title">Enable product details navigation from inventory with consistent cart behavior</span>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="story-card-body">
+        <p class="story-description">Implement the product details experience accessible from the inventory page. When a user clicks on a product name, they should be navigated to a dedicated product details page displaying full product information and maintaining consistent cart functionality. The product details page must include product name, detailed description, price, a larger product image, and an &lsquo;Add to cart&rsquo; button that behaves identically to the one on the inventory page (including state change to &lsquo;Remove&rsquo; when clicked and proper cart count update). A &lsquo;Back to products&rsquo; button should return the user to the inventory page without losing state (e.g., cart contents). The cart icon/button must remain visible and functional, allowing navigation to the cart page at any time. Ensure routing, UI consistency, and state synchronization between inventory and product pages.</p>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <h2>Test Cases</h2>
+      <button class="btn-toggle-all" id="toggle-all-btn" onclick="toggleAll()">Collapse All</button>
+    </div>
+
+    <!-- TC list -->
+    <div class="tc-list" id="tc-list">
+
+      <!-- TC 1 -->
+      <div class="tc-card" id="tc-0">
+        <div class="tc-header" onclick="toggleCard('tc-0')">
+          <span class="tc-num">#1</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Clicking product name on inventory navigates to product details page</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Observe the inventory page listing all 6 products with clickable name links</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Inventory page is loaded and displays multiple product name links</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Locate the product name link 'Sauce Labs Backpack'</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Sauce Labs Backpack' name link is visible and cursor is pointer</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Click the product name link 'Sauce Labs Backpack'</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Click triggers navigation away from /inventory.html</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe that navigation occurs to the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>URL changes to /inventory-item.html and the product details page for 'Sauce Labs Backpack' is displayed</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 2 -->
+      <div class="tc-card" id="tc-1">
+        <div class="tc-header" onclick="toggleCard('tc-1')">
+          <span class="tc-num">#2</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Clicking product image on inventory navigates to product details page</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Observe that each product on the inventory page has a clickable image</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product images on the inventory page are rendered as clickable links with pointer cursor</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the product image for 'Sauce Labs Bike Light'</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Click on the 'Sauce Labs Bike Light' image triggers navigation</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe navigation occurs to the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>URL changes to /inventory-item.html</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the product details page content matches the clicked product</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product details page displays 'Sauce Labs Bike Light' name, description, and '$9.99' price</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 3 -->
+      <div class="tc-card" id="tc-2">
+        <div class="tc-header" onclick="toggleCard('tc-2')">
+          <span class="tc-num">#3</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Product details page displays product name, description, price, image, and Add to Cart button</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Observe the product name displayed on the details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product name 'Sauce Labs Backpack' is visible as a heading/text on the page</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Observe the product description displayed on the details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product description 'carry.allTheThings() with the sleek, streamlined Sly Pack...' is visible</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the product price displayed on the details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Price '$29.99' is displayed</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the product image displayed on the details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>An image element for 'Sauce Labs Backpack' is rendered on the page</td></tr>
+              <tr><td class="step-cell step-num">5</td><td class="step-cell step-action">Observe the 'Add to cart' button displayed on the details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Add to cart' button is present and enabled</td></tr>
+              <tr><td class="step-cell step-num">6</td><td class="step-cell step-action">Observe the 'Back to products' button displayed on the details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Back to products' button is present with a back-arrow icon</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 4 -->
+      <div class="tc-card" id="tc-3">
+        <div class="tc-header" onclick="toggleCard('tc-3')">
+          <span class="tc-num">#4</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Clicking Add to Cart on product details page changes button to Remove and increments cart badge to 1</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Verify no cart badge is visible in the page header</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>No numeric badge element appears in the header area before adding</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the 'Add to cart' button on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Add to cart' button click is registered</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the button label changes immediately after clicking</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Button label changes from 'Add to cart' to 'Remove'</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the cart badge count in the header</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge in the header now shows '1'</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 5 -->
+      <div class="tc-card" id="tc-4">
+        <div class="tc-header" onclick="toggleCard('tc-4')">
+          <span class="tc-num">#5</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Product already in cart shows Remove button when viewing its product details page</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">From inventory, click 'Add to cart' for 'Sauce Labs Backpack' to put it in the cart</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge increments to '1' after clicking Add to cart on inventory</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Navigate to the product details page for 'Sauce Labs Backpack' by clicking its name</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product details page loads for 'Sauce Labs Backpack'</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the cart action button state on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>The button on the product details page shows 'Remove' (not 'Add to cart'), reflecting the already-in-cart state</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 6 -->
+      <div class="tc-card" id="tc-5">
+        <div class="tc-header" onclick="toggleCard('tc-5')">
+          <span class="tc-num">#6</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Clicking Remove on product details page decrements cart count and reverts button to Add to cart</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Confirm the cart badge shows '1' and the button reads 'Remove' on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '1' and button reads 'Remove' before clicking</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the 'Remove' button on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Remove' button click is registered</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the button label reverts after clicking</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Button label reverts from 'Remove' to 'Add to cart'</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the cart badge count in the header after removing</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge is no longer visible in the header (count decremented to 0)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 7 -->
+      <div class="tc-card" id="tc-6">
+        <div class="tc-header" onclick="toggleCard('tc-6')">
+          <span class="tc-num">#7</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Back to products button returns to inventory with cart contents preserved</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Confirm cart badge shows '1' on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '1' on the product details page before clicking Back</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the 'Back to products' button</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Back to products' button click triggers navigation</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe navigation back to the inventory page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>URL changes back to /inventory.html and the Products list is displayed</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the cart badge count on the inventory page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge on the inventory page still shows '1'</td></tr>
+              <tr><td class="step-cell step-num">5</td><td class="step-cell step-action">Observe the button state for 'Sauce Labs Backpack' on the inventory page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Sauce Labs Backpack' on the inventory page now displays a 'Remove' button</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 8 -->
+      <div class="tc-card" id="tc-7">
+        <div class="tc-header" onclick="toggleCard('tc-7')">
+          <span class="tc-num">#8</span>
+          <span class="badge badge-p1">P1</span>
+          <span class="tc-title">ProductDetails: Cart icon on product details page is visible and navigates to cart page</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Observe the cart badge is visible in the header of the product details page with count '1'</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge element showing '1' is visible in the header on the product details page</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the cart badge/icon in the header</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart icon click triggers navigation away from /inventory-item.html</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe navigation to the cart page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>URL changes to /cart.html and page heading 'Your Cart' is displayed</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the cart page lists the correct item</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart page lists 'Sauce Labs Fleece Jacket' with QTY '1' and price '$49.99'</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 9 -->
+      <div class="tc-card" id="tc-8">
+        <div class="tc-header" onclick="toggleCard('tc-8')">
+          <span class="tc-num">#9</span>
+          <span class="badge badge-p2">P2</span>
+          <span class="tc-title">ProductDetails: Inventory page reflects Remove button state for item added via product details page</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Click the product name 'Sauce Labs Backpack' to navigate to its product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product details page for 'Sauce Labs Backpack' loads</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click 'Add to cart' on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '1' and button changes to 'Remove' on product details after adding</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Click 'Back to products' to return to the inventory page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Navigation returns to /inventory.html</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the button state for 'Sauce Labs Backpack' on the inventory page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Sauce Labs Backpack' on the inventory page displays 'Remove' button, confirming cross-page state sync</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 10 -->
+      <div class="tc-card" id="tc-9">
+        <div class="tc-header" onclick="toggleCard('tc-9')">
+          <span class="tc-num">#10</span>
+          <span class="badge badge-p2">P2</span>
+          <span class="tc-title">ProductDetails: Adding multiple products from their respective detail pages increments cart badge correctly</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Click product name 'Sauce Labs Backpack' and click 'Add to cart' on its details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '1' after adding 'Sauce Labs Backpack' from its details page</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click 'Back to products' to return to inventory</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Navigation returns to inventory successfully with badge still showing '1'</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Click product name 'Sauce Labs Bike Light' and click 'Add to cart' on its details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '2' after adding 'Sauce Labs Bike Light' from its details page</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the cart badge count after adding the second product</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge on the product details page (or on return to inventory) shows '2', confirming sequential add increments correctly</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 11 -->
+      <div class="tc-card" id="tc-10">
+        <div class="tc-header" onclick="toggleCard('tc-10')">
+          <span class="tc-num">#11</span>
+          <span class="badge badge-p2">P2</span>
+          <span class="tc-title">ProductDetails: Removing last cart item from product details page removes the cart badge entirely</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Confirm cart badge shows '1' and button reads 'Remove' on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge is visible showing '1' and button reads 'Remove' before clicking</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the 'Remove' button to remove the last cart item</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Remove' button click is registered</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the cart badge visibility in the header after removal</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge element is no longer visible in the header (empty cart has no badge)</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the button state after removal</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Button label has changed back to 'Add to cart'</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 12 -->
+      <div class="tc-card" id="tc-11">
+        <div class="tc-header" onclick="toggleCard('tc-11')">
+          <span class="tc-num">#12</span>
+          <span class="badge badge-p2">P2</span>
+          <span class="tc-title">ProductDetails: Cart icon visible on product details page even when cart is empty (no badge shown)</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Navigate from inventory to the product details page with an empty cart</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Product details page loads at /inventory-item.html with empty cart</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Observe the header area on the product details page for the cart icon</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>The cart icon/link is present and accessible in the header (no badge text visible)</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe whether a numeric badge is shown on the cart icon</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>No numeric badge is displayed over or near the cart icon when cart is empty</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 13 -->
+      <div class="tc-card" id="tc-12">
+        <div class="tc-header" onclick="toggleCard('tc-12')">
+          <span class="tc-num">#13</span>
+          <span class="badge badge-p3">P3</span>
+          <span class="tc-title">ProductDetails: Unauthenticated user navigating directly to product details URL is redirected to login</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Navigate directly to https://www.saucedemo.com/inventory-item.html?id=4 without logging in</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Browser sends request to /inventory-item.html?id=4 without a valid session</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Observe the resulting page after navigation</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>App redirects to the login page (URL is https://www.saucedemo.com/)</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the error message shown to the user</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Error message displayed on the login page reads: "Epic sadface: You can only access '/inventory-item.html' when you are logged in."</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 14 -->
+      <div class="tc-card" id="tc-13">
+        <div class="tc-header" onclick="toggleCard('tc-13')">
+          <span class="tc-num">#14</span>
+          <span class="badge badge-p3">P3</span>
+          <span class="tc-title">ProductDetails: Navigating to cart from product details via cart icon shows correct item(s)</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Confirm cart badge shows '1' on the product details page for 'Sauce Labs Fleece Jacket'</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '1' on the product details page for 'Sauce Labs Fleece Jacket'</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Click the cart badge/icon in the header to navigate to the cart</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Click triggers navigation to /cart.html</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the cart page heading and listed items</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>'Your Cart' heading is displayed on the cart page</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the item details shown in the cart</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart lists 'Sauce Labs Fleece Jacket' with QTY '1', price '$49.99', description text, and a 'Remove' button</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TC 15 -->
+      <div class="tc-card" id="tc-14">
+        <div class="tc-header" onclick="toggleCard('tc-14')">
+          <span class="tc-num">#15</span>
+          <span class="badge badge-p3">P3</span>
+          <span class="tc-title">ProductDetails: Browser back navigation from product details returns to inventory with preserved cart state</span>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div class="tc-body">
+          <table class="steps-table">
+            <tbody>
+              <tr><td class="step-cell step-num">1</td><td class="step-cell step-action">Add 'Sauce Labs Bolt T-Shirt' to cart on the product details page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge shows '1' and button reads 'Remove' after adding on product details</td></tr>
+              <tr><td class="step-cell step-num">2</td><td class="step-cell step-action">Use the browser back button (go-back) to navigate back to the inventory page</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Browser back button triggers navigation away from /inventory-item.html</td></tr>
+              <tr><td class="step-cell step-num">3</td><td class="step-cell step-action">Observe the URL and page after browser back navigation</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>URL returns to /inventory.html and the Products list is displayed</td></tr>
+              <tr><td class="step-cell step-num">4</td><td class="step-cell step-action">Observe the cart badge on the inventory page after browser back</td></tr>
+              <tr><td class="step-cell step-num"></td><td class="step-cell step-expected"><span class="expected-label">Expected:</span>Cart badge on the inventory page still shows '1', confirming state was preserved through browser back navigation</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- /tc-list -->
+  </main>
+
+  <script>
+    function toggleCard(id) {
+      document.getElementById(id).classList.toggle('collapsed');
+      syncToggleAllBtn();
+    }
+
+    function toggleAll() {
+      const cards = document.querySelectorAll('.tc-card');
+      const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
+      cards.forEach(c => allCollapsed ? c.classList.remove('collapsed') : c.classList.add('collapsed'));
+      syncToggleAllBtn();
+    }
+
+    function syncToggleAllBtn() {
+      const cards = document.querySelectorAll('.tc-card');
+      const allCollapsed = [...cards].every(c => c.classList.contains('collapsed'));
+      document.getElementById('toggle-all-btn').textContent = allCollapsed ? 'Expand All' : 'Collapse All';
+    }
+
+    document.getElementById('theme-btn').addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+  </script>
+</body>
+</html>

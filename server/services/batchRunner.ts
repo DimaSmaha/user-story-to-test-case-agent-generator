@@ -1,9 +1,14 @@
 import { spawnLines, killProcess } from "./processManager";
 import { sendSSE } from "./sseManager";
-import type { Batch, Job, JobStatus } from "../types";
+import { config } from "../config";
+import type { Batch, Job } from "../types";
 
-const JOB_TIMEOUT_MS = 40 * 60 * 1000;
-const BATCH_TIMEOUT_MS = 60 * 60 * 1000;
+function clearBatchTimeout(batch: Batch): void {
+  if (batch.timeoutHandle) {
+    clearTimeout(batch.timeoutHandle);
+    batch.timeoutHandle = null;
+  }
+}
 
 export function runBatch(batch: Batch): void {
   batch.authStatus = "running";
@@ -11,7 +16,7 @@ export function runBatch(batch: Batch): void {
 
   batch.timeoutHandle = setTimeout(() => {
     if (batch.status === "running") cancelBatch(batch);
-  }, BATCH_TIMEOUT_MS);
+  }, config.batchTimeoutMs);
 
   batch.authProcess = spawnLines(
     ["tsx", "helpers/auth.ts"],
@@ -26,17 +31,7 @@ export function runBatch(batch: Batch): void {
       if (code !== 0) {
         batch.authStatus = "failed";
         sendSSE(batch, "auth-status", { status: "failed" });
-        if (batch.timeoutHandle) { clearTimeout(batch.timeoutHandle); batch.timeoutHandle = null; }
-        batch.status = "cancelled";
-        batch.endedAt = Date.now();
-        for (const job of batch.jobs.values()) {
-          if (job.status === "pending") {
-            job.status = "cancelled" as JobStatus;
-            job.endedAt = Date.now();
-            sendSSE(batch, "job-status", { storyId: job.storyId, status: "cancelled" });
-          }
-        }
-        sendSSE(batch, "batch-done", { status: "cancelled" });
+        cancelBatch(batch);
         return;
       }
 
@@ -76,7 +71,7 @@ export function startJob(batch: Batch, job: Job, onDone: () => void): void {
 
   const jobTimeout = setTimeout(() => {
     if (job.status === "running") cancelJob(batch, job);
-  }, JOB_TIMEOUT_MS);
+  }, config.jobTimeoutMs);
 
   job.process = spawnLines(
     ["tsx", "scripts/run-pipeline.ts", job.storyId],
@@ -99,7 +94,7 @@ export function startJob(batch: Batch, job: Job, onDone: () => void): void {
 
 export function finalizeBatch(batch: Batch): void {
   if (batch.status !== "running") return;
-  if (batch.timeoutHandle) { clearTimeout(batch.timeoutHandle); batch.timeoutHandle = null; }
+  clearBatchTimeout(batch);
   const jobs = Array.from(batch.jobs.values());
   const anyFailed = jobs.some((j) => j.status === "failed");
   const anyCancelled = jobs.some((j) => j.status === "cancelled");
@@ -110,7 +105,7 @@ export function finalizeBatch(batch: Batch): void {
 
 export function cancelBatch(batch: Batch): void {
   if (batch.status !== "running") return;
-  if (batch.timeoutHandle) { clearTimeout(batch.timeoutHandle); batch.timeoutHandle = null; }
+  clearBatchTimeout(batch);
   batch.status = "cancelled";
   batch.endedAt = Date.now();
 

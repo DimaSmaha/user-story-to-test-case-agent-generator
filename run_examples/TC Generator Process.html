@@ -1,0 +1,1218 @@
+﻿<!DOCTYPE html>
+<!-- saved from url=(0030)http://localhost:4000/generate -->
+<html lang="en" class="dark"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Case Generator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* в”Ђв”Ђв”Ђ Header в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    header {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .back-link {
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: color 0.15s;
+    }
+    .back-link:hover { color: #f8fafc; }
+
+    .header-sep { color: #475569; }
+
+    header h1 { font-size: 1rem; font-weight: 600; }
+
+    /* в”Ђв”Ђв”Ђ Layout в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    main {
+      flex: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      width: 100%;
+    }
+
+    /* в”Ђв”Ђв”Ђ Form card в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .form-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+
+    .form-card h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 1rem;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+
+    .input-wrap { flex: 1; }
+
+    .input-wrap label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #64748b;
+      margin-bottom: 0.35rem;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .input-wrap input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+    }
+    .input-wrap input.invalid {
+      border-color: #ef4444;
+    }
+
+    .story-links {
+      margin-top: 0.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      min-height: 1.5rem;
+    }
+
+    .story-links a {
+      font-size: 0.78rem;
+      color: #2563eb;
+      text-decoration: none;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 5px;
+      padding: 0.15rem 0.5rem;
+      transition: background 0.15s;
+    }
+    .story-links a:hover { background: #dbeafe; }
+
+    .btn-generate {
+      margin-top: 1.45rem;
+      padding: 0.6rem 1.25rem;
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .btn-generate:hover:not(:disabled) { background: #1d4ed8; }
+    .btn-generate:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* в”Ђв”Ђв”Ђ Runs section в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .runs-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.85rem;
+    }
+
+    .runs-header h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0f172a;
+    }
+
+    .btn-cancel-all {
+      padding: 0.4rem 0.9rem;
+      background: transparent;
+      border: 1px solid #fca5a5;
+      color: #ef4444;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-cancel-all:hover { background: #fef2f2; }
+
+    .btn-clear {
+      padding: 0.3rem 0.7rem;
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #64748b;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-clear:hover { background: #f1f5f9; }
+
+    .runs-list { display: flex; flex-direction: column; gap: 1.25rem; }
+
+    /* в”Ђв”Ђв”Ђ Batch card в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .batch-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+
+    .batch-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.25rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .batch-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1e293b;
+      flex: 1;
+    }
+
+    .timer {
+      font-size: 0.78rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: #64748b;
+    }
+
+    .btn-cancel {
+      padding: 0.3rem 0.7rem;
+      background: transparent;
+      border: 1px solid #fca5a5;
+      color: #ef4444;
+      border-radius: 5px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-cancel:hover { background: #fef2f2; }
+    .btn-cancel:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* в”Ђв”Ђв”Ђ Modal links в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .modal-story-link {
+      color: #2563eb;
+      text-decoration: none;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 5px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+    .modal-story-link:hover { background: #dbeafe; }
+
+    /* в”Ђв”Ђв”Ђ Status badge в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.22rem 0.6rem;
+      border-radius: 20px;
+    }
+    .badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .badge-pending   { background: #f1f5f9; color: #64748b; }
+    .badge-running   { background: #eff6ff; color: #2563eb; }
+    .badge-completed { background: #f0fdf4; color: #16a34a; }
+    .badge-failed    { background: #fef2f2; color: #dc2626; }
+    .badge-cancelled { background: #fff7ed; color: #ea580c; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .badge-running::before { animation: pulse 1.2s ease-in-out infinite; }
+
+    /* в”Ђв”Ђв”Ђ Batch body в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .batch-body { padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+
+    /* в”Ђв”Ђв”Ђ Auth block в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .auth-block {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .block-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.9rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      cursor: pointer;
+      user-select: none;
+    }
+    .block-header:hover { background: #f1f5f9; }
+
+    .block-label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #475569;
+      flex: 1;
+    }
+
+    .toggle-icon {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      transition: transform 0.15s;
+    }
+    .collapsed .toggle-icon { transform: rotate(-90deg); }
+
+    .log-wrap {
+      background: #0f172a;
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 0.75rem 1rem;
+    }
+    .log-wrap.collapsed { display: none; }
+
+    .log-line {
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 0.75rem;
+      line-height: 1.65;
+      color: #cbd5e1;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .log-empty {
+      font-size: 0.75rem;
+      color: #475569;
+      font-style: italic;
+    }
+
+    /* в”Ђв”Ђв”Ђ Jobs list в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    .jobs-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+    .job-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .job-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.55rem 0.9rem;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .job-title {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e293b;
+      flex: 1;
+    }
+
+    .job-timer {
+      font-size: 0.75rem;
+      font-variant-numeric: tabular-nums;
+      color: #64748b;
+    }
+
+    /* в”Ђв”Ђв”Ђ API key modal в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    #api-key-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.5); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    #api-key-modal > div {
+      background: #fff; border-radius: 12px; padding: 2rem;
+      width: 100%; max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    #api-key-modal h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.35rem; }
+    #api-key-modal p  { font-size: 0.875rem; color: #64748b; margin-bottom: 1rem; }
+    #api-key-input {
+      width: 100%; padding: 0.6rem 0.85rem;
+      border: 1px solid #cbd5e1; border-radius: 7px;
+      font-size: 0.9rem; margin-bottom: 0.5rem; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    #api-key-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+    #api-key-error { display: none; color: #ef4444; font-size: 0.8rem; margin-bottom: 0.75rem; }
+    #api-key-submit {
+      width: 100%; padding: 0.65rem;
+      background: #2563eb; color: #fff; border: none;
+      border-radius: 7px; font-size: 0.9rem; font-weight: 500;
+      cursor: pointer; transition: background 0.15s;
+    }
+    #api-key-submit:hover { background: #1d4ed8; }
+
+    /* в”Ђв”Ђв”Ђ API key header button в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    #api-key-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 1rem; color: #94a3b8; padding: 0.25rem;
+      line-height: 1; transition: color 0.15s;
+    }
+    #api-key-btn:hover { color: #f8fafc; }
+
+    /* в”Ђв”Ђв”Ђ Theme toggle button в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    #theme-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: #94a3b8;
+      padding: 0.25rem;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    #theme-btn:hover { color: #f8fafc; }
+
+    /* в”Ђв”Ђв”Ђ Dark mode overrides в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ */
+    :root.dark { color-scheme: dark; }
+    .dark body { background: #0f172a; color: #e2e8f0; }
+    .dark header { background: #0f172a; }
+    .dark .form-card,
+    .dark .batch-card { background: #1e293b; border-color: #334155; box-shadow: none; }
+    .dark .form-card h2 { color: #f1f5f9; }
+    .dark .runs-header h2 { color: #f1f5f9; }
+    .dark .batch-header { background: #1e293b; border-color: #334155; }
+    .dark .batch-title { color: #f1f5f9; }
+    .dark .job-header { background: #1e293b; border-color: #334155; }
+    .dark .job-title { color: #f1f5f9; }
+    .dark .job-card { border-color: #334155; }
+    .dark .auth-block { border-color: #334155; }
+    .dark .block-header { background: #1e293b; border-color: #334155; }
+    .dark .block-header:hover { background: #263148; }
+    .dark .block-label { color: #94a3b8; }
+    .dark .input-wrap label { color: #94a3b8; }
+    .dark .input-wrap input {
+      background: #0f172a; border-color: #475569; color: #e2e8f0;
+    }
+    .dark .input-wrap input:focus {
+      border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2);
+    }
+    .dark .timer { color: #64748b; }
+    .dark .job-timer { color: #64748b; }
+    .dark .btn-clear { border-color: #475569; color: #94a3b8; }
+    .dark .btn-clear:hover { background: #334155; }
+    .dark .btn-cancel-all { border-color: #7f1d1d; color: #f87171; }
+    .dark .btn-cancel-all:hover { background: rgba(127,29,29,.3); }
+    .dark .badge-pending   { background: #1e293b; color: #94a3b8; }
+    .dark .badge-running   { background: #1e3a5f; color: #60a5fa; }
+    .dark .badge-completed { background: #14532d; color: #4ade80; }
+    .dark .badge-failed    { background: #450a0a; color: #f87171; }
+    .dark .badge-cancelled { background: #431407; color: #fb923c; }
+    .dark .story-links a {
+      background: #1e3a5f; border-color: #1d4ed8; color: #93c5fd;
+    }
+    .dark .story-links a:hover { border-color: #3b82f6; }
+    .dark .modal-story-link {
+      background: #1e3a5f; border-color: #1d4ed8; color: #93c5fd;
+    }
+    .dark .modal-story-link:hover { border-color: #3b82f6; }
+    /* Modal panels */
+    .dark #modal-backdrop > div,
+    .dark #cancel-modal-backdrop > div {
+      background: #1e293b; color: #e2e8f0;
+    }
+    .dark #modal-backdrop > div p,
+    .dark #cancel-modal-msg { color: #94a3b8; }
+    .dark #modal-ids {
+      background: #0f172a; border-color: #334155; color: #e2e8f0;
+    }
+    .dark #modal-cancel,
+    .dark #cancel-modal-dismiss {
+      background: #0f172a; border-color: #334155; color: #94a3b8;
+    }
+    .dark #api-key-modal > div { background: #1e293b; color: #e2e8f0; }
+    .dark #api-key-modal p { color: #94a3b8; }
+    .dark #api-key-input { background: #0f172a; border-color: #475569; color: #e2e8f0; }
+    .dark #api-key-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+  </style>
+</head>
+<body data-new-gr-c-s-check-loaded="14.1291.0" data-gr-ext-installed="">
+  <header>
+    <a href="http://localhost:4000/" class="back-link">в†ђ Home</a>
+    <span class="header-sep">/</span>
+    <h1>Test Case Generator</h1>
+    <button id="api-key-btn" title="Change API key">рџ”‘</button>
+    <button id="theme-btn" title="Toggle dark mode">вЂ</button>
+  </header>
+
+  <main>
+    <!-- Input form -->
+    <div class="form-card">
+      <h2>Generate Test Cases</h2>
+      <div class="input-row">
+        <div class="input-wrap">
+          <label for="story-ids-input">Story IDs (comma-separated, each must be 3+ digits)</label>
+          <input id="story-ids-input" type="text" placeholder="e.g. 112, 113, 114" autocomplete="off">
+          <div class="story-links" id="story-links"><a href="http://localhost:3000/tasks/114" target="_blank" rel="noopener noreferrer">#114 в†—</a></div>
+        </div>
+        <button class="btn-generate" id="generate-btn">Generate Test Cases</button>
+      </div>
+    </div>
+
+    <!-- Runs section -->
+    <div id="runs-section" style="">
+      <div class="runs-header">
+        <h2>Runs</h2>
+        <button class="btn-cancel-all" id="cancel-all-btn" style="display: none;">Cancel All</button>
+      </div>
+      <div class="runs-list" id="runs-list"><div class="batch-card" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee">
+        <div class="batch-header">
+          <span class="batch-title">#114 &nbsp;<span style="font-weight:400;color:#94a3b8;font-size:0.78rem">11:16:52 AM</span></span>
+          <span class="timer batch-timer" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee"></span>
+          <span class="badge badge-completed batch-badge" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee">completed</span>
+          <button class="btn-cancel batch-cancel-btn" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" style="display: none;" onclick="confirmAndCancelBatch(&#39;5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee&#39;)">Cancel</button>
+          <button class="btn-clear" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" style="" onclick="clearBatch(&#39;5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee&#39;)">Clear</button>
+        </div>
+        <div class="batch-body">
+          <div class="auth-block" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee">
+            <div class="block-header" onclick="toggleBlock(this)">
+              <span class="block-label">Auth</span>
+              <span class="badge badge-completed auth-badge" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee">completed</span>
+              <span class="toggle-icon">в–ј</span>
+            </div>
+            <div class="log-wrap auth-log" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee">
+              
+            <div class="log-line">в—‡ injected env (0) from .env // tip: вЊ override existing { override: true }</div><div class="log-line"><span style="color:#06b6d4">[AUTH]</span> Launching browser...</div><div class="log-line"><span style="color:#06b6d4">[AUTH]</span> Navigating to https://www.saucedemo.com...</div><div class="log-line"><span style="color:#06b6d4">[AUTH]</span> Filling credentials for user "standard_user"...</div><div class="log-line"><span style="color:#06b6d4">[AUTH]</span> Submitting login form...</div><div class="log-line"><span style="color:#06b6d4">[AUTH]</span> Waiting for navigation to inventory...</div><div class="log-line"><span style="color:#06b6d4">[AUTH]</span> Saving auth state to .playwright-auth/auth.json...</div><div class="log-line"><span style="color:#22c55e"><span style="font-weight:700">вњ“ Auth complete</span></span> вЂ” state saved to .playwright-auth/auth.json</div></div>
+          </div>
+          <div class="jobs-list" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee">
+            
+        <div class="job-card" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" data-story-id="114">
+          <div class="job-header">
+            <span class="job-title">Story #114</span>
+            <span class="job-timer" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" data-story-id="114"></span>
+            <span class="badge badge-completed job-badge" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" data-story-id="114">completed</span>
+            <button class="btn-cancel job-cancel-btn" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" data-story-id="114" style="display: none;" onclick="confirmAndCancelJob(&#39;5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee&#39;,&#39;114&#39;)">Cancel</button>
+          </div>
+          <div class="block-header" onclick="toggleBlock(this)">
+            <span class="block-label">Pipeline</span>
+            <span class="toggle-icon">в–ј</span>
+          </div>
+          <div class="log-wrap pipeline-log" data-batch-id="5f85e161-dfce-4fe5-9d7a-ee0064f3b9ee" data-story-id="114">
+            
+          <div class="log-line">в—‡ injected env (0) from .env // tip: вЊ enable debugging { debug: true }</div><div class="log-line"><span style="color:#06b6d4"><span style="font-weight:700">в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ</span></span></div><div class="log-line"><span style="color:#06b6d4"><span style="font-weight:700">  /flow-1a-gt-us-to-tc  --us-id 114</span></span></div><div class="log-line"><span style="color:#06b6d4"><span style="font-weight:700">в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ</span></span></div><div class="log-line"><span style="opacity:0.5">Tracker: fake</span></div><div class="log-line"><span style="opacity:0.5">Session: 00000000-0000-0000-0000-000000000000</span></div><div class="log-line"><span style="opacity:0.5">Model:   claude-sonnet-4-6</span></div><div class="log-line"><span style="opacity:0.5">Skills:  flow-1a-gt-us-to-tc, ft-bug-reporter, gt-story-planner, gt-tc-reconciler, gt-test-case-generator, gt-test-ideation, operations-with-issue-tracker, playwright-cli, update-config, debug, simplify, batch, fewer-permission-prompts, loop, schedule, claude-api</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">ls -t .workflow-artifacts/gtc-*/us.json 2&gt;/dev/null | head -5</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".workflow-artifacts\gtc-*\us.json" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending </span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260513-211000\us.json</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".workflow-artifacts\gtc-*\us.json" -ErrorAction SilentlyContinue | ForEach-Object { $content = Get-Conten</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$run_id = "gtc-$(Get-Date -Format 'yyyyMMdd-HHmmss')"; New-Item -ItemType Directory -Path ".workflow-artifacts\$run_id" </span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">[config/auth operation]</span></div><div class="log-line">  **в†’ New run gtc-20260514-111719**</div><div class="log-line">  `ISSUE_TRACKER=fake`, `FAKE_TRACKER_URL=http://localhost:3000` вњ“</div><div class="log-line">  **в†’ Immediately continuing to Phase 1 вЂ” gt-story-planner**</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Skill</span> <span style="opacity:0.5">{"skill":"gt-story-planner","args":"--us-id 114 --run-id gtc-20260514-111719"}</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">bash .claude/skills/operations-with-issue-tracker/scripts/preflight.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-Command bash -ErrorAction SilentlyContinue; Get-Command wsl -ErrorAction SilentlyContinue; $env:PATH -split ";" | Wh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" ".claude/skills/operations-with-issue-tracker/scripts/preflight.sh"</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" ".claude/skills/operations-with-issue-tracker/scripts/get.sh" "--id" "114" "--type" "Task</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cd '/project' &amp;&amp; bash .claude/skills/oper</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">[config/auth operation]</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\preflight.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\_common.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Test-Path ".workflow-artifacts\.tracker-cache.json"; if (Test-Path ".workflow-artifacts\.tracker-cache.json") { Get-Cont</span></div><div class="log-line">  Good вЂ” tracker cache exists. Now let me fetch story 114:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cd '/c/qa/work/user-story-to-test-case-agent-generator' &amp;&amp; bash .claude/skills/oper</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$out = &amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cd '/c/qa/work/user-story-to-test-case-agent-generator' &amp;&amp; bash .claude/skil</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cd '/c/qa/work/user-story-to-test-case-agent-generator' &amp;&amp; bash .claude/skills/oper</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\get.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">bash .claude/skills/operations-with-issue-tracker/scripts/get.sh --id 114 --type Task</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cat /tmp/get_out.txt"</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5"># Also try reading via Git bash tmp</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "echo test &gt; /tmp/findme.txt &amp;&amp; echo ok"</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem "C:\Program Files\Git\tmp\" -ErrorAction SilentlyContinue</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$proc = Start-Process -FilePath "C:\Program Files\Git\usr\bin\bash.exe" -ArgumentList @("-c", "echo test &gt; /c/qa/work/user-story-to</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$response = Invoke-RestMethod -Uri "http://localhost:3000/tasks/114" -Method GET -ErrorAction SilentlyContinue</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$response = Invoke-RestMethod -Uri "http://localhost:3000/tasks/114" -Method GET -ErrorAction SilentlyContinue</span></div><div class="log-line">  Got story 114. Let me check if there's additional AC data:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">for ($i = 0; $i -lt 5; $i++) {</span></div><div class="log-line">  Now I'll write the `us.json` artifact:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\us.json</span></div><div class="log-line">  Now let me explore the app with playwright-cli. First, load auth state:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Skill</span> <span style="opacity:0.5">[config/auth operation]</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">[config/auth operation]</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">npx playwright-cli open https://www.saucedemo.com</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">[config/auth operation]</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-Command npx; (Get-Command npx).Source</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem "C:\Program Files\nodejs\" -Filter "node*" | Select-Object Name, FullName</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem "C:\Program Files\nodejs\" | Select-Object Name</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem "C:\Program Files\nodejs" -Force | Select-Object Name, Length, LastWriteTime | Format-Table -AutoSize</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" --version</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$node = "C:\Program Files\nodejs\node.exe"</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem "node_modules\playwright-cli\" -ErrorAction SilentlyCon</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem "node_modules\.bin\" | Select-Object Name | Format-Tabl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-Content "node_modules\.bin\playwright-cli.ps1" | Select-Object -F</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">node_modules\.bin\playwright-cli.ps1</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Test-Path "node_modules\@playwright\cli\playwright-cli.js"</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" -ErrorAction SilentlyContinue | Sort</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-20-16-458Z.yml</span></div><div class="log-line">  Good вЂ” browser opened. Now let me load auth and navigate to inventory:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | ForEach-Object { Wri</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-20-29-881Z.yml</span></div><div class="log-line">  I can see the inventory page. Now let me navigate to a product details page by clicking a product link:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object { Wri</span></div><div class="log-line">  Product details page is loaded. Key observations: вњ“ product name, description, price, image, "Add to cart" button, "Back to products" button all present. **вљ  Cart icon not visible in accessibility tree on either page.** Let me explore further:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | ForEach-Object { Wri</span></div><div class="log-line">  Now let me test "Add to cart" on product details and verify cart state changes:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | ForEach-Object { Wri</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-22-03-173Z.yml</span></div><div class="log-line">  Excellent! вњ“ Button changed to "Remove", вњ“ Cart badge shows "1". Now test "Back to products":</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object { Wri</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-22-19-545Z.yml</span></div><div class="log-line">  <span style="color:#22c55e">вњ“ Cart badge "1" preserved on inventory, вњ“ Backpack shows "Remove" on inventory page (state sync working). Now check cart icon navigation:</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object { "$(</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-22-39-724Z.yml</span></div><div class="log-line">  <span style="color:#22c55e">вњ“ Cart page confirmed вЂ” cart icon navigates correctly, item persisted. Now checking existing tests:</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Grep</span> <span style="opacity:0.5">product.detail|inventory-item|item_detail|backpack|product.name.*click|product.*navigation</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">**/*.spec.ts</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">**/*.spec.ts</span></div><div class="log-line">  No existing specs found вЂ” no SKIP scenarios. Now I have full picture of the app. Let me write the artifacts:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\scenarios.md</span></div><div class="log-line">  **вњ“ Scenarios planned: 15 scenarios (0 skipped as already covered)**</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: gt-story-planner (1) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "gt-story-planner",</div><div class="log-line">    "status": "SUCCESS",</div><div class="log-line">    "us_id": "114",</div><div class="log-line">    "title": "Enable product details navigation from inventory with consistent cart behavior",</div><div class="log-line">    "scenario_count": 15</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 1.5 вЂ” App Exploration**</div><div class="log-line">  Auth state was already loaded during Phase 1 exploration. Continuing with `exploration.json` write based on gathered observations:</div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: gt-story-planner</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#22c55e"><span style="font-weight:700">SUCCESS</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  us_id: <span style="color:#06b6d4">114</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  title: <span style="color:#06b6d4">Enable product details navigation from inventory with consistent cart behavior</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  scenario_count: <span style="color:#06b6d4">15</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\exploration.json</span></div><div class="log-line">  **вњ“ App explored: 3 pages visited, 0 potential bugs found**</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: App exploration (1.5) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "app-exploration",</div><div class="log-line">    "status": "SUCCESS",</div><div class="log-line">    "pages_visited_count": 3,</div><div class="log-line">    "bug_count": 0</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 2 вЂ” gt-test-ideation**</div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: app-exploration</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#22c55e"><span style="font-weight:700">SUCCESS</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  pages_visited_count: <span style="color:#06b6d4">3</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  bug_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Skill</span> <span style="opacity:0.5">{"skill":"gt-test-ideation","args":"--run-id gtc-20260514-111719"}</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\us.json</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\scenarios.md</span></div><div class="log-line">  Now let me catalog existing page object methods:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">tests/pages/*.ts</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">tests/fixtures/*.ts</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">tests/**/*.ts</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">**/*.page.ts</span></div><div class="log-line">  No page objects exist yet вЂ” no reusable helpers available. Let me verify a few key behaviors in the app before writing ideation:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 5 | ForEach-Object { "$(</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-25-00-051Z.yml</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  Got exact error message: **"Epic sadface: You can only access '/inventory-item.html' when you are logged in."** Now verify cart badge removal when last item removed:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".playwright-cli\" | Sort-Object LastWriteTime -Descending | Select-Object -First 3 | ForEach-Object { "$(</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.playwright-cli\page-2026-05-14T08-25-22-430Z.yml</span></div><div class="log-line">  I have all the information I need. Exact unauthenticated error: **"Epic sadface: You can only access '/inventory-item.html' when you are logged in."** Let me close the browser and write the ideation:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\nodejs\node.exe" "node_modules\@playwright\cli\playwright-cl</span></div><div class="log-line">  Now writing `test-ideas.json` вЂ” 15 units, all ideas/verifications length-validated before writing:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\test-ideas.json</span></div><div class="log-line">  Now writing `test-ideas.md`:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\test-ideas.md</span></div><div class="log-line">  **вњ“ Test ideas generated: 15 ideation units** вЂ” all `ideas.length === verifications.length` validated вњ“</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: gt-test-ideation (2) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "gt-test-ideation",</div><div class="log-line">    "status": "SUCCESS",</div><div class="log-line">    "total_ideas": 15,</div><div class="log-line">    "scenario_count": 15</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 2.5 вЂ” Bug reporting**</div><div class="log-line">  `exploration.json.bugs` is empty вЂ” no bugs found during exploration.</div><div class="log-line">  `No exploration bugs to report` в†’ continuing to Phase 2.7.</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: Bug reporting (2.5) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "ft-bug-reporter",</div><div class="log-line">    "status": "SKIPPED",</div><div class="log-line">    "bugs_filed": 0,</div><div class="log-line">    "bugs_failed": 0</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 2.7 вЂ” TC Reconciliation**</div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: gt-test-ideation</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#22c55e"><span style="font-weight:700">SUCCESS</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  total_ideas: <span style="color:#06b6d4">15</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  scenario_count: <span style="color:#06b6d4">15</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: ft-bug-reporter</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#eab308"><span style="font-weight:700">SKIPPED</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  bugs_filed: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  bugs_failed: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cd '/c/qa/work/user-story-to-test-case-agent-generator' &amp;&amp; bash .claude/skills/gt-t</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$maxRetries = 5</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">for ($i = 0; $i -lt 5; $i++) {</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".claude\skills\gt-tc-reconciler\scripts\" | Select-Object Name</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">.claude/skills/gt-tc-reconciler/**/*</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\gt-tc-reconciler\scripts\fetch-existing-tcs.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">.claude/skills/operations-with-issue-tracker/scripts/get-linked-tcs.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\get-linked-tcs.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">for ($i = 0; $i -lt 5; $i++) {</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">.claude/skills/operations-with-issue-tracker/adapters/fake/*.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">.claude/skills/operations-with-issue-tracker/adapters/**/*.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">.claude/skills/operations-with-issue-tracker/**/*</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\adapters\fake\get-linked-tcs.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">for ($i = 0; $i -lt 5; $i++) {</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$response = $null</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$ErrorActionPreference = 'SilentlyContinue'</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5"># Try with curl via node http module approach - just use a simple retry pattern</span></div><div class="log-line">  Endpoint returned `[]` вЂ” no existing TCs linked to story 114. Writing `reconciliation.json`:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\reconciliation.json</span></div><div class="log-line">  **вњ“ TC reconciliation: 0 existing matched, 15 to create, 0 obsolete**</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: TC Reconciliation (2.7) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "gt-tc-reconciler",</div><div class="log-line">    "status": "SKIPPED",</div><div class="log-line">    "existing_tc_count": 0,</div><div class="log-line">    "match_count": 0,</div><div class="log-line">    "obsolete_count": 0</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 3 вЂ” Batch TC generation**</div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: gt-tc-reconciler</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#eab308"><span style="font-weight:700">SKIPPED</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  existing_tc_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  match_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  obsolete_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Skill</span> <span style="opacity:0.5">{"skill":"gt-test-case-generator","args":"--run-id gtc-20260514-111719 --scenari</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">&amp; "C:\Program Files\Git\usr\bin\bash.exe" "-c" "cd '/c/qa/work/user-story-to-test-case-agent-generator' &amp;&amp; bash .claude/skills/gt-t</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".workflow-artifacts\gtc-20260514-111719\" | Sort-Object LastWriteTime -Descending | Select-Object Name, L</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-Content ".workflow-artifacts\gtc-20260514-111719\tc-steps-0.md" -ErrorAction SilentlyContinue</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".workflow-artifacts\gtc-20260514-111719\" | Sort-Object LastWriteTime -Descending | Format-Table Name, La</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Start-Sleep -Seconds 5</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Start-Sleep -Seconds 15</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".workflow-artifacts\gtc-20260514-111719\" -Filter "tc-*.json" | Sort-Object Name | Select-Object Name</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-ChildItem ".workflow-artifacts\gtc-20260514-111719" | Where-Object { $_.Name -like "tc-*.json" } | Sort-Object Name </span></div><div class="log-line">  9 created so far. Batch stopped вЂ” re-running for remaining (resume-safe):</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$proc = Start-Process -FilePath "C:\Program Files\Git\usr\bin\bash.exe" -ArgumentList @("-c", "cd '/c/qa/work/user-story-to-test-ca</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">Get-Content ".workflow-artifacts\gtc-20260514-111719\batch-log.txt" -ErrorAction SilentlyContinue</span></div><div class="log-line">  12 of 15 created. Running again for tc-12, tc-13, tc-14:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$proc = Start-Process -FilePath "C:\Program Files\Git\usr\bin\bash.exe" -ArgumentList @("-c", "cd '/c/qa/work/user-story-to-test-ca</span></div><div class="log-line">  All 15 generated. Let me read them all to confirm and build the Phase 5 summary:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">0..14 | ForEach-Object {</span></div><div class="log-line">  **вњ“ Test cases generated: 15 / 15 scenarios**</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: gt-test-case-generator (3) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "gt-test-case-generator",</div><div class="log-line">    "status": "SUCCESS",</div><div class="log-line">    "tc_count": 15,</div><div class="log-line">    "failed_count": 0</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 3.5 вЂ” Tag Obsolete TCs**</div><div class="log-line">  `reconciliation.json` has `existing_tc_count: 0` and `actions: []` вЂ” no obsolete TCs to tag.</div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: Tag Obsolete TCs (3.5) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "tag-obsolete",</div><div class="log-line">    "status": "SKIPPED",</div><div class="log-line">    "obsolete_tagged_count": 0,</div><div class="log-line">    "obsolete_failed_count": 0</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Immediately continuing to Phase 4 вЂ” Link TCs to Story**</div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: gt-test-case-generator</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#22c55e"><span style="font-weight:700">SUCCESS</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  tc_count: <span style="color:#06b6d4">15</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  failed_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: tag-obsolete</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#eab308"><span style="font-weight:700">SKIPPED</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  obsolete_tagged_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  obsolete_failed_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">PowerShell</span> <span style="opacity:0.5">$linkedCount = 0</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\link.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Glob</span> <span style="opacity:0.5">.claude/skills/operations-with-issue-tracker/scripts/adapters/fake/link.sh</span></div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Read</span> <span style="opacity:0.5">.claude\skills\operations-with-issue-tracker\scripts\adapters\fake\_not_implemented.sh</span></div><div class="log-line">  Fake tracker's link verb is not implemented вЂ” returns `{"ok":true,"skipped":true}` which is treated as success per pipeline contract. Writing `links.json`:</div><div class="log-line">  <span style="color:#eab308">[TOOL]</span> <span style="font-weight:700">Write</span> <span style="opacity:0.5">.workflow-artifacts\gtc-20260514-111719\links.json</span></div><div class="log-line">  ```json</div><div class="log-line">  &lt;!-- PHASE COMPACT: Link TCs to Story (4) --&gt;</div><div class="log-line">  {</div><div class="log-line">    "phase": "link-tcs-to-story",</div><div class="log-line">    "status": "SUCCESS",</div><div class="log-line">    "linked_count": 15,</div><div class="log-line">    "failed_count": 0</div><div class="log-line">  }</div><div class="log-line">  ```</div><div class="log-line">  ---</div><div class="log-line">  **в†’ Phase 5 вЂ” Final Summary**</div><div class="log-line">  ---</div><div class="log-line">  <span style="color:#06b6d4"><span style="font-weight:700">## Pipeline Complete вЂ” Story 114</span></span></div><div class="log-line">  | # | Scenario | TC ID | Tracker ID | Reused | Link Status |</div><div class="log-line">  |---|----------|-------|------------|--------|-------------|</div><div class="log-line">  | 0 | [P1] Clicking product name on inventory navigates to product details page | tc-1778747424-11362 | TEST-87766 | no | linked |</div><div class="log-line">  | 1 | [P1] Clicking product image on inventory navigates to product details page | tc-1778747429-7508 | TEST-75528 | no | linked |</div><div class="log-line">  | 2 | [P1] Product details page displays product name, description, price, image, and Add to Cart button | tc-1778747435-28966 | TEST-48195 | no | linked |</div><div class="log-line">  | 3 | [P1] Clicking Add to Cart on product details page changes button to Remove and increments cart badge to 1 | tc-1778747440-29027 | TEST-1900 | no | linked |</div><div class="log-line">  | 4 | [P1] Product already in cart shows Remove button when viewing its product details page | tc-1778747446-18590 | TEST-11533 | no | linked |</div><div class="log-line">  | 5 | [P1] Clicking Remove on product details page decrements cart count and reverts button to Add to cart | tc-1778747451-27267 | TEST-45311 | no | linked |</div><div class="log-line">  | 6 | [P1] Back to products button returns to inventory with cart contents preserved | tc-1778747456-1103 | TEST-64540 | no | linked |</div><div class="log-line">  | 7 | [P1] Cart icon on product details page is visible and navigates to cart page | tc-1778747463-7793 | TEST-32335 | no | linked |</div><div class="log-line">  | 8 | [P2] Inventory page reflects Remove button state for item added via product details page | tc-1778747468-29996 | TEST-25958 | no | linked |</div><div class="log-line">  | 9 | [P2] Adding multiple products from their respective detail pages increments cart badge correctly | tc-1778747473-30833 | TEST-20184 | no | linked |</div><div class="log-line">  | 10 | [P2] Removing last cart item from product details page removes the cart badge entirely | tc-1778747478-13892 | TEST-76031 | no | linked |</div><div class="log-line">  | 11 | [P2] Cart icon visible on product details page even when cart is empty (no badge shown) | tc-1778747483-31827 | TEST-48756 | no | linked |</div><div class="log-line">  | 12 | [P3] Unauthenticated user navigating directly to product details URL is redirected to login | tc-1778747487-14168 | TEST-11987 | no | linked |</div><div class="log-line">  | 13 | [P3] Navigating to cart from product details via cart icon shows correct item(s) | tc-1778747492-19212 | TEST-62018 | no | linked |</div><div class="log-line">  | 14 | [P3] Browser back navigation from product details returns to inventory with preserved cart state | tc-1778747499-18162 | TEST-57164 | no | linked |</div><div class="log-line">  ---</div><div class="log-line">  **Run ID:** `gtc-20260514-111719`  </div><div class="log-line">  **Total:** 15 scenarios | 0 modified | 15 created | 0 obsolete tagged | 15 linked to story 114 | 0 skipped</div><div class="log-line">  **Next:** run `flow-1b-gt-tc-to-spec --run-id gtc-20260514-111719` to generate Playwright specs</div><div class="log-line"><span style="color:#a855f7"><span style="font-weight:700">в”Њв”Ђ PHASE COMPACT: link-tcs-to-story</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  status: <span style="color:#22c55e"><span style="font-weight:700">SUCCESS</span></span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  linked_count: <span style="color:#06b6d4">15</span></div><div class="log-line"><span style="color:#a855f7">в”‚</span>  failed_count: <span style="color:#06b6d4">0</span></div><div class="log-line"><span style="color:#a855f7">в””в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ</span></div><div class="log-line"><span style="color:#22c55e"><span style="font-weight:700">в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ</span></span></div><div class="log-line"><span style="color:#22c55e"><span style="font-weight:700">  PIPELINE COMPLETE</span></span></div><div class="log-line"><span style="color:#22c55e"><span style="font-weight:700">в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ</span></span></div><div class="log-line"><span style="font-weight:700">Session:</span>  00000000-0000-0000-0000-000000000000</div><div class="log-line"><span style="font-weight:700">Turns:</span>    133  в”‚  <span style="font-weight:700">Duration:</span> 950.9s  в”‚  <span style="font-weight:700">Cost:</span> $3.1869</div><div class="log-line"><span style="font-weight:700">Phase results:</span></div><div class="log-line">  gt-story-planner                             <span style="color:#22c55e">SUCCESS</span></div><div class="log-line">  app-exploration                              <span style="color:#22c55e">SUCCESS</span></div><div class="log-line">  gt-test-ideation                             <span style="color:#22c55e">SUCCESS</span></div><div class="log-line">  ft-bug-reporter                              <span style="color:#eab308">SKIPPED</span></div><div class="log-line">  gt-tc-reconciler                             <span style="color:#eab308">SKIPPED</span></div><div class="log-line">  gt-test-case-generator                       <span style="color:#22c55e">SUCCESS</span></div><div class="log-line">  tag-obsolete                                 <span style="color:#eab308">SKIPPED</span></div><div class="log-line">  link-tcs-to-story                            <span style="color:#22c55e">SUCCESS</span></div><div class="log-line"><span style="font-weight:700">Totals:</span></div><div class="log-line">  Test cases generated: <span style="color:#06b6d4">1</span></div><div class="log-line">  TCs linked to story:  <span style="color:#06b6d4">15</span></div><div class="log-line">  Exploration bugs:     <span style="opacity:0.5">0</span></div></div>
+        </div>
+      
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </main>
+
+  <!-- Confirm modal -->
+  <div id="modal-backdrop" style="display: none; position: fixed; inset: 0px; background: rgba(0, 0, 0, 0.45); z-index: 100; align-items: center; justify-content: center;">
+    <div style="
+      background:#fff; border-radius:12px; padding:1.75rem;
+      width:100%; max-width:420px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+    ">
+      <h2 style="font-size:1rem; font-weight:700; margin-bottom:0.5rem;">Confirm Generation</h2>
+      <p style="font-size:0.875rem; color:#64748b; margin-bottom:1rem;">
+        Generate test cases for the following story IDs?
+      </p>
+      <div id="modal-ids" style="
+        background:#f8fafc; border:1px solid #e2e8f0;
+        border-radius:7px; padding:0.6rem 0.9rem;
+        font-size:0.875rem; font-weight:500; color:#1e293b;
+        margin-bottom:1.5rem;
+      "><a class="modal-story-link" href="http://localhost:3000/tasks/114" target="_blank" rel="noopener noreferrer">#114 в†—</a></div>
+      <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+        <button id="modal-cancel" style="
+          padding:0.55rem 1rem; border:1px solid #e2e8f0;
+          background:#fff; border-radius:7px; font-size:0.875rem;
+          cursor:pointer; color:#475569;
+        ">Cancel</button>
+        <button id="modal-confirm" style="
+          padding:0.55rem 1.1rem; background:#2563eb;
+          color:#fff; border:none; border-radius:7px;
+          font-size:0.875rem; font-weight:500; cursor:pointer;
+        ">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API Key modal -->
+  <div id="api-key-modal">
+    <div>
+      <h2>API Key Required</h2>
+      <p>Enter the key to connect to the server. It will be saved in your browser.</p>
+      <input id="api-key-input" type="password" placeholder="Paste your API key" autocomplete="off">
+      <div id="api-key-error"></div>
+      <button id="api-key-submit">Connect</button>
+    </div>
+  </div>
+
+  <!-- Cancel confirm modal -->
+  <div id="cancel-modal-backdrop" style="
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.45); z-index:100;
+    align-items:center; justify-content:center;
+  ">
+    <div style="
+      background:#fff; border-radius:12px; padding:1.75rem;
+      width:100%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+    ">
+      <h2 style="font-size:1rem; font-weight:700; margin-bottom:0.5rem;">Confirm Cancel</h2>
+      <p id="cancel-modal-msg" style="font-size:0.875rem; color:#64748b; margin-bottom:1.5rem;"></p>
+      <div style="display:flex; gap:0.75rem; justify-content:flex-end;">
+        <button id="cancel-modal-dismiss" style="
+          padding:0.55rem 1rem; border:1px solid #e2e8f0;
+          background:#fff; border-radius:7px; font-size:0.875rem;
+          cursor:pointer; color:#475569;
+        ">Keep Running</button>
+        <button id="cancel-modal-confirm" style="
+          padding:0.55rem 1.1rem; background:#ef4444;
+          color:#fff; border:none; border-radius:7px;
+          font-size:0.875rem; font-weight:500; cursor:pointer;
+        ">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // в”Ђв”Ђв”Ђ State в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    let trackerBaseUrl = '';
+    const batchStartTimes = new Map(); // batchId -> number
+    const jobStartTimes = new Map();   // `${batchId}:${storyId}` -> number
+
+    // в”Ђв”Ђв”Ђ API Key auth в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    const APIKEY_STORAGE = 'qa_hub_api_key';
+
+    function getApiKey() { return localStorage.getItem(APIKEY_STORAGE) || ''; }
+
+    async function apiFetch(url, opts = {}) {
+      const key = getApiKey();
+      const headers = { ...(opts.headers || {}) };
+      if (key) headers['X-API-Key'] = key;
+      const r = await fetch(url, { ...opts, headers });
+      if (r.status === 401) showApiKeyModal('API key invalid or expired. Please re-enter.');
+      return r;
+    }
+
+    // EventSource can't set headers вЂ” pass key as query param instead
+    function sseUrl(path) {
+      const key = getApiKey();
+      return key ? `${path}?apiKey=${encodeURIComponent(key)}` : path;
+    }
+
+    function showApiKeyModal(error) {
+      const errEl = document.getElementById('api-key-error');
+      errEl.textContent = error || '';
+      errEl.style.display = error ? '' : 'none';
+      document.getElementById('api-key-modal').style.display = 'flex';
+      document.getElementById('api-key-input').focus();
+    }
+
+    function hideApiKeyModal() {
+      document.getElementById('api-key-modal').style.display = 'none';
+    }
+
+    document.getElementById('api-key-btn').addEventListener('click', () => showApiKeyModal());
+
+    document.getElementById('api-key-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('api-key-submit').click();
+    });
+
+    document.getElementById('api-key-submit').addEventListener('click', async () => {
+      const key = document.getElementById('api-key-input').value.trim();
+      const headers = key ? { 'X-API-Key': key } : {};
+      try {
+        const r = await fetch('/api/config', { headers });
+        if (r.status === 401) {
+          document.getElementById('api-key-error').textContent = 'Invalid key. Try again.';
+          document.getElementById('api-key-error').style.display = '';
+          return;
+        }
+        localStorage.setItem(APIKEY_STORAGE, key);
+        const c = await r.json().catch(() => ({}));
+        trackerBaseUrl = c.trackerUrl ?? '';
+        hideApiKeyModal();
+        await loadBatches();
+      } catch {
+        document.getElementById('api-key-error').textContent = 'Could not reach server.';
+        document.getElementById('api-key-error').style.display = '';
+      }
+    });
+
+    // в”Ђв”Ђв”Ђ Config в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    async function loadConfig() {
+      try {
+        const r = await apiFetch('/api/config');
+        if (!r.ok) return;
+        const c = await r.json();
+        trackerBaseUrl = c.trackerUrl ?? '';
+      } catch { /* ignore */ }
+    }
+
+    // в”Ђв”Ђв”Ђ Input / links в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function parseIds(val) {
+      return val.split(',').map(s => s.trim()).filter(s => /^\d{3,}$/.test(s));
+    }
+
+    const storyInput = document.getElementById('story-ids-input');
+    const generateBtn = document.getElementById('generate-btn');
+    const storyLinksEl = document.getElementById('story-links');
+
+    storyInput.addEventListener('input', () => {
+      const ids = parseIds(storyInput.value);
+      generateBtn.disabled = ids.length === 0;
+
+      storyLinksEl.innerHTML = '';
+      for (const id of ids) {
+        const a = document.createElement('a');
+        a.href = `${trackerBaseUrl}/tasks/${id}`;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = `#${id} в†—`;
+        storyLinksEl.appendChild(a);
+      }
+    });
+
+    // в”Ђв”Ђв”Ђ Modal в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    const backdrop = document.getElementById('modal-backdrop');
+    const modalIds = document.getElementById('modal-ids');
+    const modalConfirm = document.getElementById('modal-confirm');
+    const modalCancel = document.getElementById('modal-cancel');
+
+    function showModal(ids, onConfirm) {
+      modalIds.innerHTML = ids.map(id => {
+        if (trackerBaseUrl) {
+          return `<a class="modal-story-link" href="${escHtml(trackerBaseUrl)}/tasks/${id}" target="_blank" rel="noopener noreferrer">#${id} в†—</a>`;
+        }
+        return `<span style="font-weight:500;">#${id}</span>`;
+      }).join(' ');
+      backdrop.style.display = 'flex';
+      modalConfirm.onclick = () => { backdrop.style.display = 'none'; onConfirm(); };
+      modalCancel.onclick = () => { backdrop.style.display = 'none'; };
+    }
+
+    backdrop.addEventListener('click', e => {
+      if (e.target === backdrop) backdrop.style.display = 'none';
+    });
+
+    // в”Ђв”Ђв”Ђ Cancel confirm modal в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    const cancelBackdrop = document.getElementById('cancel-modal-backdrop');
+    const cancelModalMsg = document.getElementById('cancel-modal-msg');
+    const cancelModalConfirmBtn = document.getElementById('cancel-modal-confirm');
+    const cancelModalDismiss = document.getElementById('cancel-modal-dismiss');
+
+    function showCancelConfirm(message, onConfirm) {
+      cancelModalMsg.textContent = message;
+      cancelBackdrop.style.display = 'flex';
+      cancelModalConfirmBtn.onclick = () => { cancelBackdrop.style.display = 'none'; onConfirm(); };
+      cancelModalDismiss.onclick = () => { cancelBackdrop.style.display = 'none'; };
+    }
+
+    cancelBackdrop.addEventListener('click', e => {
+      if (e.target === cancelBackdrop) cancelBackdrop.style.display = 'none';
+    });
+
+    function hideAllCancelButtons(batchId) {
+      document.querySelectorAll(`.batch-cancel-btn[data-batch-id="${batchId}"]`)
+        .forEach(btn => btn.style.display = 'none');
+      document.querySelectorAll(`.job-cancel-btn[data-batch-id="${batchId}"]`)
+        .forEach(btn => btn.style.display = 'none');
+    }
+
+    function confirmAndCancelBatch(batchId) {
+      showCancelConfirm('Cancel this entire run?', () => {
+        cancelBatch(batchId);
+        hideAllCancelButtons(batchId);
+        // Optimistic update вЂ” flip all running/pending jobs for this batch immediately
+        document.querySelectorAll(`.job-badge[data-batch-id="${batchId}"]`).forEach(badge => {
+          if (badge.classList.contains('badge-running') || badge.classList.contains('badge-pending')) {
+            const storyId = badge.dataset.storyId;
+            badge.className = `badge badge-cancelled job-badge`;
+            badge.setAttribute('data-batch-id', batchId);
+            badge.setAttribute('data-story-id', storyId);
+            badge.textContent = 'cancelled';
+            jobStartTimes.delete(`${batchId}:${storyId}`);
+            const timerEl = document.querySelector(`.job-timer[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+            if (timerEl) timerEl.textContent = '';
+          }
+        });
+        const batchBadge = document.querySelector(`.batch-badge[data-batch-id="${batchId}"]`);
+        if (batchBadge) {
+          batchBadge.className = `badge badge-cancelled batch-badge`;
+          batchBadge.setAttribute('data-batch-id', batchId);
+          batchBadge.textContent = 'cancelled';
+        }
+        batchStartTimes.delete(batchId);
+        const batchTimer = document.querySelector(`.batch-timer[data-batch-id="${batchId}"]`);
+        if (batchTimer) batchTimer.textContent = '';
+        const clearBtn = document.querySelector(`.btn-clear[data-batch-id="${batchId}"]`);
+        if (clearBtn) clearBtn.style.display = '';
+      });
+    }
+
+    function confirmAndCancelJob(batchId, storyId) {
+      showCancelConfirm(`Cancel job for Story #${storyId}?`, () => {
+        cancelJob(batchId, storyId);
+        document.querySelectorAll(`.job-cancel-btn[data-batch-id="${batchId}"][data-story-id="${storyId}"]`)
+          .forEach(btn => btn.style.display = 'none');
+        // Optimistic update for this job
+        const badge = document.querySelector(`.job-badge[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+        if (badge) {
+          badge.className = `badge badge-cancelled job-badge`;
+          badge.setAttribute('data-batch-id', batchId);
+          badge.setAttribute('data-story-id', storyId);
+          badge.textContent = 'cancelled';
+        }
+        jobStartTimes.delete(`${batchId}:${storyId}`);
+        const timerEl = document.querySelector(`.job-timer[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+        if (timerEl) timerEl.textContent = '';
+      });
+    }
+
+    function confirmAndCancelAll() {
+      showCancelConfirm('Cancel all running jobs?', () => {
+        cancelAll();
+        document.querySelectorAll('.btn-cancel').forEach(btn => btn.style.display = 'none');
+        document.getElementById('cancel-all-btn').style.display = 'none';
+        // Optimistic update вЂ” flip all running/pending badges to cancelled immediately
+        document.querySelectorAll('.job-badge.badge-running, .job-badge.badge-pending').forEach(badge => {
+          badge.className = badge.className.replace(/badge-(running|pending)/, 'badge-cancelled');
+          badge.textContent = 'cancelled';
+        });
+        document.querySelectorAll('.batch-badge.badge-running').forEach(badge => {
+          badge.className = badge.className.replace('badge-running', 'badge-cancelled');
+          badge.textContent = 'cancelled';
+        });
+      });
+    }
+
+    generateBtn.addEventListener('click', () => {
+      const ids = parseIds(storyInput.value);
+      if (ids.length === 0) return;
+      showModal(ids, () => submitGenerate(ids));
+    });
+
+    // в”Ђв”Ђв”Ђ API в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    async function submitGenerate(storyIds) {
+      const r = await apiFetch('/api/batches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storyIds }),
+      });
+      if (!r.ok) return;
+      const { id, batch } = await r.json();
+      batchStartTimes.set(id, batch.startedAt);
+      renderBatch(batch);
+      subscribeSSE(id);
+    }
+
+    async function cancelBatch(batchId) {
+      await apiFetch(`/api/batches/${batchId}`, { method: 'DELETE' });
+    }
+
+    async function cancelJob(batchId, storyId) {
+      await apiFetch(`/api/batches/${batchId}/jobs/${storyId}`, { method: 'DELETE' });
+    }
+
+    async function cancelAll() {
+      await apiFetch('/api/batches', { method: 'DELETE' });
+    }
+
+    async function clearBatch(batchId) {
+      await apiFetch(`/api/batches/${batchId}/clear`, { method: 'DELETE' });
+      const card = document.querySelector(`.batch-card[data-batch-id="${batchId}"]`);
+      if (card) card.remove();
+      if (document.querySelectorAll('.batch-card').length === 0) {
+        document.getElementById('runs-section').style.display = 'none';
+      }
+    }
+
+    document.getElementById('cancel-all-btn').addEventListener('click', confirmAndCancelAll);
+
+    // в”Ђв”Ђв”Ђ SSE в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function subscribeSSE(batchId) {
+      const es = new EventSource(sseUrl(`/api/batches/${batchId}/stream`));
+
+      es.addEventListener('log', e => {
+        const { block, storyId, text } = JSON.parse(e.data);
+        if (block === 'auth') {
+          appendAuthLog(batchId, text);
+        } else {
+          appendPipelineLog(batchId, storyId, text);
+        }
+      });
+
+      es.addEventListener('auth-status', e => {
+        const { status } = JSON.parse(e.data);
+        setAuthStatus(batchId, status);
+      });
+
+      es.addEventListener('job-status', e => {
+        const { storyId, status, startedAt } = JSON.parse(e.data);
+        if (startedAt) jobStartTimes.set(`${batchId}:${storyId}`, startedAt);
+        setJobStatus(batchId, storyId, status);
+      });
+
+      es.addEventListener('batch-done', e => {
+        const { status } = JSON.parse(e.data);
+        setBatchStatus(batchId, status);
+        batchStartTimes.delete(batchId);
+        es.close();
+      });
+
+      es.addEventListener('error', () => es.close());
+    }
+
+    // в”Ђв”Ђв”Ђ Render batch в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function renderBatch(batch) {
+      document.getElementById('runs-section').style.display = '';
+
+      const card = document.createElement('div');
+      card.className = 'batch-card';
+      card.dataset.batchId = batch.id;
+
+      const ids = batch.storyIds.map(id => `#${id}`).join(', ');
+      const ts = new Date(batch.startedAt).toLocaleTimeString();
+
+      card.innerHTML = `
+        <div class="batch-header">
+          <span class="batch-title">${escHtml(ids)} &nbsp;<span style="font-weight:400;color:#94a3b8;font-size:0.78rem">${ts}</span></span>
+          <span class="timer batch-timer" data-batch-id="${batch.id}"></span>
+          <span class="badge badge-${batch.status} batch-badge" data-batch-id="${batch.id}">${batch.status}</span>
+          <button class="btn-cancel batch-cancel-btn" data-batch-id="${batch.id}"
+            style="${batch.status !== 'running' ? 'display:none' : ''}"
+            onclick="confirmAndCancelBatch('${batch.id}')">Cancel</button>
+          <button class="btn-clear" data-batch-id="${batch.id}"
+            style="${batch.status === 'running' ? 'display:none' : ''}"
+            onclick="clearBatch('${batch.id}')">Clear</button>
+        </div>
+        <div class="batch-body">
+          <div class="auth-block" data-batch-id="${batch.id}">
+            <div class="block-header" onclick="toggleBlock(this)">
+              <span class="block-label">Auth</span>
+              <span class="badge badge-${batch.authStatus} auth-badge" data-batch-id="${batch.id}">${batch.authStatus}</span>
+              <span class="toggle-icon">&#9660;</span>
+            </div>
+            <div class="log-wrap auth-log" data-batch-id="${batch.id}">
+              ${batch.authLogs.length === 0
+                ? '<div class="log-empty">Waiting for auth...</div>'
+                : batch.authLogs.map(l => `<div class="log-line">${ansiToHtml(l)}</div>`).join('')}
+            </div>
+          </div>
+          <div class="jobs-list" data-batch-id="${batch.id}">
+            ${Object.values(batch.jobs).map(job => renderJobCard(batch.id, job)).join('')}
+          </div>
+        </div>
+      `;
+
+      const list = document.getElementById('runs-list');
+      list.prepend(card);
+
+      if (batch.startedAt && batch.status === 'running') {
+        batchStartTimes.set(batch.id, batch.startedAt);
+      }
+    }
+
+    function renderJobCard(batchId, job) {
+      return `
+        <div class="job-card" data-batch-id="${batchId}" data-story-id="${job.storyId}">
+          <div class="job-header">
+            <span class="job-title">Story #${escHtml(job.storyId)}</span>
+            <span class="job-timer" data-batch-id="${batchId}" data-story-id="${job.storyId}"></span>
+            <span class="badge badge-${job.status} job-badge"
+                  data-batch-id="${batchId}" data-story-id="${job.storyId}">${job.status}</span>
+            <button class="btn-cancel job-cancel-btn"
+                    data-batch-id="${batchId}" data-story-id="${job.storyId}"
+                    style="${job.status !== 'running' && job.status !== 'pending' ? 'display:none' : ''}"
+                    onclick="confirmAndCancelJob('${batchId}','${job.storyId}')">Cancel</button>
+          </div>
+          <div class="block-header" onclick="toggleBlock(this)">
+            <span class="block-label">Pipeline</span>
+            <span class="toggle-icon">&#9660;</span>
+          </div>
+          <div class="log-wrap pipeline-log" data-batch-id="${batchId}" data-story-id="${job.storyId}">
+            ${job.pipelineLogs.length === 0
+              ? `<div class="log-empty">Waiting for pipeline...</div>`
+              : job.pipelineLogs.map(l => `<div class="log-line">${ansiToHtml(l)}</div>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // в”Ђв”Ђв”Ђ DOM updates в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function appendAuthLog(batchId, text) {
+      const wrap = document.querySelector(`.auth-log[data-batch-id="${batchId}"]`);
+      if (!wrap) return;
+      const empty = wrap.querySelector('.log-empty');
+      if (empty) empty.remove();
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.innerHTML = ansiToHtml(text);
+      wrap.appendChild(div);
+      scrollIfBottom(wrap);
+    }
+
+    function appendPipelineLog(batchId, storyId, text) {
+      const wrap = document.querySelector(`.pipeline-log[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+      if (!wrap) return;
+      const empty = wrap.querySelector('.log-empty');
+      if (empty) empty.remove();
+      const div = document.createElement('div');
+      div.className = 'log-line';
+      div.innerHTML = ansiToHtml(text);
+      wrap.appendChild(div);
+      scrollIfBottom(wrap);
+    }
+
+    function scrollIfBottom(el) {
+      const threshold = 60;
+      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+      if (atBottom) el.scrollTop = el.scrollHeight;
+    }
+
+    function setAuthStatus(batchId, status) {
+      const badge = document.querySelector(`.auth-badge[data-batch-id="${batchId}"]`);
+      if (badge) {
+        badge.className = `badge badge-${status} auth-badge`;
+        badge.setAttribute('data-batch-id', batchId);
+        badge.textContent = status;
+      }
+    }
+
+    function setJobStatus(batchId, storyId, status) {
+      const badge = document.querySelector(`.job-badge[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+      if (badge) {
+        badge.className = `badge badge-${status} job-badge`;
+        badge.setAttribute('data-batch-id', batchId);
+        badge.setAttribute('data-story-id', storyId);
+        badge.textContent = status;
+      }
+      const cancelBtn = document.querySelector(`.job-cancel-btn[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+      if (cancelBtn) {
+        if (status === 'running' || status === 'pending') {
+          cancelBtn.style.display = '';
+          cancelBtn.disabled = false;
+        } else {
+          cancelBtn.style.display = 'none';
+        }
+      }
+      if (status !== 'running') {
+        jobStartTimes.delete(`${batchId}:${storyId}`);
+        const timerEl = document.querySelector(`.job-timer[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+        if (timerEl) timerEl.textContent = '';
+      }
+    }
+
+    function setBatchStatus(batchId, status) {
+      const badge = document.querySelector(`.batch-badge[data-batch-id="${batchId}"]`);
+      if (badge) {
+        badge.className = `badge badge-${status} batch-badge`;
+        badge.setAttribute('data-batch-id', batchId);
+        badge.textContent = status;
+      }
+      hideAllCancelButtons(batchId);
+
+      // Show Clear button once batch reaches a terminal state
+      const clearBtn = document.querySelector(`.btn-clear[data-batch-id="${batchId}"]`);
+      if (clearBtn && status !== 'running') clearBtn.style.display = '';
+
+      batchStartTimes.delete(batchId);
+      const timerEl = document.querySelector(`.batch-timer[data-batch-id="${batchId}"]`);
+      if (timerEl) timerEl.textContent = '';
+
+      // Hide Cancel All button if no running batches remain
+      const anyRunning = document.querySelectorAll('.batch-badge.badge-running').length > 0;
+      if (!anyRunning) document.getElementById('cancel-all-btn').style.display = 'none';
+    }
+
+    // в”Ђв”Ђв”Ђ Timers в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function fmtElapsed(ms) {
+      const s = Math.floor(ms / 1000);
+      const m = Math.floor(s / 60);
+      const h = Math.floor(m / 60);
+      if (h > 0) return `${h}:${pad(m % 60)}:${pad(s % 60)}`;
+      return `${m}:${pad(s % 60)}`;
+    }
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    setInterval(() => {
+      const now = Date.now();
+
+      for (const [batchId, startedAt] of batchStartTimes) {
+        const el = document.querySelector(`.batch-timer[data-batch-id="${batchId}"]`);
+        if (el) el.textContent = fmtElapsed(now - startedAt);
+      }
+
+      for (const [key, startedAt] of jobStartTimes) {
+        const [batchId, storyId] = key.split(':');
+        const el = document.querySelector(`.job-timer[data-batch-id="${batchId}"][data-story-id="${storyId}"]`);
+        if (el) el.textContent = fmtElapsed(now - startedAt);
+      }
+    }, 1000);
+
+    // в”Ђв”Ђв”Ђ Collapsible blocks в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function toggleBlock(headerEl) {
+      const logWrap = headerEl.nextElementSibling;
+      if (!logWrap) return;
+      const isCollapsed = logWrap.classList.toggle('collapsed');
+      headerEl.classList.toggle('collapsed', isCollapsed);
+    }
+
+    // в”Ђв”Ђв”Ђ Load existing batches on page load в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    async function loadBatches() {
+      try {
+        const r = await apiFetch('/api/batches');
+        if (!r.ok) return;
+        const list = await r.json();
+        // iterate oldest-first so prepend gives newest-at-top
+        for (const batch of list) {
+          if (batch.status === 'running') {
+            // render with empty logs вЂ” SSE replay will fill them in (avoids duplication)
+            const empty = {
+              ...batch,
+              authLogs: [],
+              jobs: Object.fromEntries(
+                Object.entries(batch.jobs).map(([k, v]) => [k, { ...v, pipelineLogs: [] }])
+              ),
+            };
+            renderBatch(empty);
+            subscribeSSE(batch.id);
+          } else {
+            renderBatch(batch);
+          }
+        }
+        if (list.length > 0) {
+          document.getElementById('runs-section').style.display = '';
+        }
+      } catch { /* ignore */ }
+    }
+
+    // в”Ђв”Ђв”Ђ Escape HTML в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    function escHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // в”Ђв”Ђв”Ђ ANSI в†’ HTML в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    const ANSI_COLORS = {
+      '30': 'color:#475569', '31': 'color:#ef4444', '32': 'color:#22c55e',
+      '33': 'color:#eab308', '34': 'color:#3b82f6', '35': 'color:#a855f7',
+      '36': 'color:#06b6d4', '37': 'color:#f8fafc',
+    };
+    function ansiToHtml(raw) {
+      const safe = escHtml(raw);
+      let out = '';
+      let openSpans = 0;
+      const parts = safe.split(/(\x1b\[\d+m)/);
+      for (const part of parts) {
+        const m = part.match(/^\x1b\[(\d+)m$/);
+        if (!m) { out += part; continue; }
+        const code = m[1];
+        if (code === '0') {
+          while (openSpans-- > 0) out += '</span>';
+          openSpans = 0;
+        } else if (code === '1') {
+          out += '<span style="font-weight:700">'; openSpans++;
+        } else if (code === '2') {
+          out += '<span style="opacity:0.5">'; openSpans++;
+        } else if (ANSI_COLORS[code]) {
+          out += `<span style="${ANSI_COLORS[code]}">`;  openSpans++;
+        }
+      }
+      while (openSpans-- > 0) out += '</span>';
+      return out;
+    }
+
+    // в”Ђв”Ђв”Ђ Init в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    // Probe /api/config first; if 401 the modal appears and loadBatches runs after key is set.
+    (async function init() {
+      try {
+        const key = getApiKey();
+        const r = await fetch('/api/config', key ? { headers: { 'X-API-Key': key } } : {});
+        if (r.status === 401) { showApiKeyModal(); return; }
+        const c = await r.json().catch(() => ({}));
+        trackerBaseUrl = c.trackerUrl ?? '';
+        await loadBatches();
+      } catch { /* server unreachable вЂ” fail silently */ }
+    })();
+
+    // в”Ђв”Ђв”Ђ Dark mode toggle в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
+    (function () {
+      const html = document.documentElement;
+      const btn = document.getElementById('theme-btn');
+      function applyScheme(dark) {
+        html.classList.toggle('dark', dark);
+        btn.textContent = dark ? 'вЂ' : 'рџЊ™';
+      }
+      applyScheme(localStorage.getItem('colorScheme') === 'dark');
+      btn.addEventListener('click', () => {
+        const isDark = html.classList.toggle('dark');
+        localStorage.setItem('colorScheme', isDark ? 'dark' : 'light');
+        btn.textContent = isDark ? 'вЂ' : 'рџЊ™';
+      });
+    })();
+  </script>
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

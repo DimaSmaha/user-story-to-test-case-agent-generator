@@ -1,0 +1,9 @@
+node_modules
+dist
+.workflow-artifacts
+.playwright
+.playwright-auth
+.playwright-cli
+.git
+*.log
+.env

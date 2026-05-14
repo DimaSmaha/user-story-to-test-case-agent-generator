@@ -18,6 +18,13 @@ plans
 /workflow-artifacts/
 /.workflow-artifacts/
 
-Skills to explore
+# Secrets / keys
+*.key
+*.pem
+*.p12
+*.pfx
+.env.local
+.env.*.local
 
 .env
+dist/

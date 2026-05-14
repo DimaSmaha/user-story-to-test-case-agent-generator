@@ -4,9 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "tsx --watch server/local.ts",
+    "server": "tsx server/local.ts",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.server.json",
+    "start": "node dist/server/production.js",
+    "docker:dev": "docker-compose up --build",
+    "docker:build": "docker build -t us-tc-generator .",
     "auth": "tsx --tsconfig tsconfig.scripts.json scripts/auth.ts",
     "us:to:tc": "tsx --tsconfig tsconfig.scripts.json scripts/run-pipeline.ts",
-    "server": "tsx server/index.ts",
     "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
     "lint": "eslint \"server/**/*.ts\" \"scripts/**/*.ts\" \"helpers/**/*.ts\"",
     "format": "prettier --write \"server/**/*.ts\" \"scripts/**/*.ts\" \"helpers/**/*.ts\""
@@ -24,7 +30,8 @@
     "@typescript-eslint/parser": "^8.59.3",
     "eslint": "^10.3.0",
     "prettier": "^3.8.3",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.138",

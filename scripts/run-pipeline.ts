@@ -1,4 +1,5 @@
 import { query } from "@anthropic-ai/claude-agent-sdk";
+import * as fs from "fs";
 import * as path from "path";
 import { getEnvVars } from "../helpers/getEnvVars";
 import {
@@ -12,6 +13,15 @@ import {
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const MAX_TURNS = Number(process.env["MAX_PIPELINE_TURNS"] ?? 200);
+
+function findGitBashBin(): string {
+  const candidates = [
+    "C:\\qa\\Git\\usr\\bin",
+    "C:\\Program Files\\Git\\usr\\bin",
+    "C:\\Program Files (x86)\\Git\\usr\\bin",
+  ];
+  return candidates.find((p) => fs.existsSync(p)) ?? "";
+}
 
 async function main(): Promise<void> {
   const usId = process.argv[2];
@@ -50,6 +60,12 @@ async function main(): Promise<void> {
   let sessionId = "";
   let model = "";
 
+  // Ensure bash (Git for Windows) and npx are resolvable inside the agent session.
+  const nodeBinDir = path.dirname(process.execPath);
+  const gitBashDir = findGitBashBin();
+  const extraDirs = [nodeBinDir, gitBashDir].filter(Boolean).join(path.delimiter);
+  const augmentedPath = extraDirs + path.delimiter + (process.env["PATH"] ?? "");
+
   try {
     const stream = query({
       prompt: `/flow-1a-gt-us-to-tc --us-id ${usId}`,
@@ -61,7 +77,7 @@ async function main(): Promise<void> {
         maxTurns: MAX_TURNS,
         abortController: controller,
         env: {
-          PATH: process.env["PATH"],
+          PATH: augmentedPath,
           HOME: process.env["HOME"] ?? process.env["USERPROFILE"],
           USERPROFILE: process.env["USERPROFILE"],
           ISSUE_TRACKER: envVars.ISSUE_TRACKER,
