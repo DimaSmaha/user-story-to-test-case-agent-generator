@@ -1,7 +1,11 @@
 import { spawn, ChildProcess } from "child_process";
 import * as path from "path";
 
-const PROJECT_ROOT = path.resolve(__dirname, "../..");
+// dev: server/services (2 up), prod: dist/server/services (3 up)
+const PROJECT_ROOT = path.resolve(
+  __dirname,
+  __dirname.split(path.sep).includes("dist") ? "../../.." : "../..",
+);
 
 export const stripAnsi = (s: string): string =>
   s.replace(/\x1b\[[0-9;]*[mGKHFJABCDST]/g, "").replace(/\x1b[()][0-9A-Za-z]/g, "");
