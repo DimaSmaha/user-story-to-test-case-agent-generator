@@ -59,10 +59,6 @@ For each non-SKIP scenario, produce a structured ideation unit:
 If a scenario involves navigation flow, modals, error states, or conditional UI
 that is not clear from the story text alone:
 
-0. Load auth state before navigating (REQUIRED):
-   ```bash
-   playwright-cli state-load .playwright-auth/auth.json
-   ```
 1. Use `playwright-cli` to navigate through the actual flow
 2. Observe exact labels, validation messages, route changes, modal triggers
 3. Use these observations to write accurate `ideas` and `verifications`
@@ -118,10 +114,6 @@ for review — one section per scenario with conditions, numbered steps, and ass
 
 - `.workflow-artifacts/{run_id}/test-ideas.json`
 - `.workflow-artifacts/{run_id}/test-ideas.md`
-
-Output the phase checkpoint: `✓ Test ideas generated: N ideation units` (replace N with the actual count).
-
-Return control to the caller — do not suggest the pipeline is finished.
 
 ## Hard rules
 

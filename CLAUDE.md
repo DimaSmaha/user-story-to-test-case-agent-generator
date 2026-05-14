@@ -116,24 +116,21 @@ Format: `## [P{priority}] <Module>: <description>`. SKIP entries include the cov
 ```
 Constraint: `ideas.length === verifications.length` for every unit — hard fail if violated.
 
-**`tc-N.json`** — written by `gt-test-case-generator` (N = scenario index)
+**`tc-N.json`** — written by `gt-test-case-generator` (N = scenario index) — tracker registration record
 ```json
 {
   "id": "tc-1234567890",
   "tracker_id": 42,
-  "index": 0,
-  "scenario": "[P1] Auth: Login with valid credentials succeeds",
+  "scenario_index": 0,
   "title": "Login with valid credentials succeeds",
-  "ideas": ["..."],
-  "verifications": ["..."],
-  "navigations": ["login", "inventory"],
-  "conditions": ["..."],
-  "ac_trace": ["..."],
-  "reusable_helpers": ["..."],
-  "parent_us_id": "112"
+  "parent_us_id": "112",
+  "deduped": false,
+  "reused": false,
+  "steps_xml_path": ".workflow-artifacts/gtc-.../tc-steps-0.xml",
+  "steps_md_path":  ".workflow-artifacts/gtc-.../tc-steps-0.md"
 }
 ```
-Ideas and verifications are copied verbatim from `test-ideas.json` — no LLM rewriting at this stage.
+Ideation fields (`ideas`, `verifications`, `conditions`, etc.) are NOT duplicated here — read from `test-ideas.json[scenario_index]`.
 
 **`bug-{i}.json`** — written by `ft-bug-reporter` (optional, one per exploration bug)
 ```json

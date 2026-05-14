@@ -10,7 +10,7 @@ description: >
 # gt-test-case-generator
 
 Convert one or more scenarios from `test-ideas.json` into tracker test cases and
-emit `tc-N.json` artifacts for downstream spec writing.
+emit `tc-N.json` tracker registration records.
 
 **This stage is fully deterministic — it uses a shell script, not LLM generation.**
 Do not paraphrase, expand, or rewrite the ideas or verifications. The script
@@ -21,14 +21,6 @@ formats them verbatim.
 **Required:**
 - `test-ideas.json` from `gt-test-ideation` — path under `.workflow-artifacts/{run_id}/`
 - `scenario_index` — 0-based index of the scenario to process (or `all` to process every scenario)
-
-If `test-ideas.json` is missing, check `.workflow-artifacts/` or ask the user to
-run `gt-test-ideation` first.
-
-If `scenario_index` is not specified, ask:
-```
-Which scenario index should I create a test case for? (0 = first, "all" = every scenario)
-```
 
 ## Workflow
 
@@ -60,7 +52,7 @@ The script:
 2. Writes `tc-steps-<n>.md` — numbered Step / Expected table
 3. Writes `tc-steps-<n>.xml` — same data as XML CDATA
 4. Runs `preflight.sh` then `create.sh` to upload the test case to the tracker
-5. Writes `tc-<n>.json` — full artifact including all ideation context
+5. Writes `tc-<n>.json` — tracker registration record (`id`, `tracker_id`, `scenario_index`, `title`, `parent_us_id`, `deduped`, `reused`, `steps_xml_path`, `steps_md_path`). Ideation fields are NOT duplicated — read from `test-ideas.json[scenario_index]` when needed.
 6. Prints `tc-<n>.json` on stdout
 
 **All scenarios (with retry logic):**
@@ -88,17 +80,6 @@ The batch script:
 
 The script is idempotent: if `tc-<n>.json` already exists for a given index it
 returns immediately without re-creating or re-uploading.
-
-### 4. Output
-
-Tell the user:
-
-```
-tc-<n>.json written to .workflow-artifacts/{run_id}/
-Tracker upload: OK (id may be 0 for fake tracker — expected)
-```
-
-List every tc file created when processing multiple scenarios.
 
 ## Hard rules
 

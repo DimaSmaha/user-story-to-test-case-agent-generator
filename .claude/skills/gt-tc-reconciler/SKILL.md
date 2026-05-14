@@ -114,7 +114,23 @@ Written only when `existing-tcs.json` was written. Absent on clean runs.
 }
 ```
 
-### `tc-{n}.json` — new field
+### `tc-{n}.json` — tracker registration record
+
+Contains only tracker-registration fields. Ideation fields (`ideas`, `verifications`, `conditions`, `navigations`, `ac_trace`, `reusable_helpers`) are NOT duplicated here — read them from `test-ideas.json[scenario_index]`.
+
+```json
+{
+  "id": "tc-1234567890",
+  "tracker_id": 42,
+  "scenario_index": 0,
+  "title": "Login with valid credentials succeeds",
+  "parent_us_id": "112",
+  "deduped": false,
+  "reused": false,
+  "steps_xml_path": ".workflow-artifacts/{run_id}/tc-steps-0.xml",
+  "steps_md_path":  ".workflow-artifacts/{run_id}/tc-steps-0.md"
+}
+```
 
 `reused: true` when the TC updated an existing tracker item; `false` when created fresh.
 

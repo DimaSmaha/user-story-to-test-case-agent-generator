@@ -3,7 +3,7 @@
 # Deterministic (no-LLM) conversion of one test-ideas.json scenario into:
 #   tc-steps-<n>.md   — numbered step/expected table (Markdown)
 #   tc-steps-<n>.xml  — same data as XML CDATA steps
-#   tc-<n>.json       — full tc artifact for gt-spec-writer
+#   tc-<n>.json       — tracker registration record (tracker_id, scenario_index, paths)
 # Also uploads the test case to the tracker via create.sh.
 # Outputs tc-<n>.json content on stdout (for chaining).
 set -euo pipefail
@@ -148,24 +148,16 @@ jq -n \
   --arg xml_path "$XML_FILE" \
   --arg md_path "$MD_FILE" \
   --argjson index "$INDEX" \
-  --argjson scenario "$scenario_json" \
   '{
     id: $id,
     tracker_id: $tracker_id,
+    scenario_index: $index,
     title: $title,
     parent_us_id: $us_id,
-    steps_xml_path: $xml_path,
-    steps_md_path: $md_path,
-    scenario_index: $index,
-    scenario: $scenario.scenario,
-    conditions: ($scenario.conditions // []),
-    ideas: ($scenario.ideas // []),
-    verifications: ($scenario.verifications // []),
-    navigations: ($scenario.navigations // []),
-    ac_trace: ($scenario.ac_trace // []),
-    reusable_helpers: ($scenario.reusable_helpers // []),
     deduped: $deduped,
-    reused: $reused
+    reused: $reused,
+    steps_xml_path: $xml_path,
+    steps_md_path: $md_path
   }' > "$TC_JSON"
 
 cat "$TC_JSON"

@@ -15,11 +15,17 @@ Turn a high-confidence `app-bug` classification into a tracker bug and emit
 
 ## Inputs
 
-**Required:**
+**Pipeline A-1 (exploration shortcut):**
+- `--from-exploration <exploration.json> --bug-index <i>` — reads `exploration.json.bugs[i]` directly.
+  - Maps `severity` → `confidence`: critical→0.90, high→0.80, medium→0.70, low→0.62
+  - Skips step 1 (verdict is always `app-bug`); goes directly to step 2
+  - Writes `bug-{i}.json` (instead of `bug.json`)
+
+**Pipeline B (standard path):**
 - `classification.json` — must have `verdict: "app-bug"` and `confidence >= 0.60`
 - `repro.json` — for error details and evidence artifact paths
 
-If either file is missing, check `.workflow-artifacts/` for the most recent run.
+If standard-path files are missing, check `.workflow-artifacts/` for the most recent run.
 If still not found, ask the user to run `ft-repro` and `ft-classifier` first.
 
 ## Workflow
