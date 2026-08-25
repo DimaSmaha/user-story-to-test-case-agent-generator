@@ -6,6 +6,15 @@ description: >
   transition work items. Supports GitHub Issues, ADO, Jira, Linear, and the
   fake mock tracker (localhost or ngrok). Strongly prefer this skill over direct
   tracker CLI/API calls so all callers share one stable JSON contract.
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: >-
+            bash .claude/hooks/review-gate.sh
+            --ac-file .claude/skills/operations-with-issue-tracker/SKILL.md
+            --ac-section "Acceptance criteria"
+            --focus "tracker script output must be copied verbatim, never rewritten or invented"
 ---
 
 # operations-with-issue-tracker
@@ -132,6 +141,20 @@ With fake tracker: `{"id":0,"url":"http://localhost:3000/bugs/create","deduped":
 3. Do not hardcode tracker field IDs in caller code.
 4. Keep caller logic tracker-agnostic — adapter scripts handle tracker specifics.
 5. With the fake tracker, `id:0` on create is expected and valid.
+
+## Acceptance criteria
+
+Checked by the Stop-hook review gate (`.claude/hooks/review-gate.sh`) before a
+session using this skill is allowed to end:
+
+1. Every script's stdout JSON is passed on to the caller **verbatim** — never
+   paraphrased, reformatted, summarized, or invented.
+2. `{"id":0,...}` from the fake tracker on create is treated as success, not
+   an error, and is not "corrected" or replaced with a fabricated ID.
+3. `{"error":...}` output is surfaced as-is, not silently swallowed or
+   rewritten into a different message.
+4. No tracker field, ID, or URL appearing in downstream artifacts was
+   introduced by the caller instead of read from a script's actual output.
 
 ## References
 
