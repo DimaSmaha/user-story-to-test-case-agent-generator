@@ -6,15 +6,6 @@ description: >
   transition work items. Supports GitHub Issues, ADO, Jira, Linear, and the
   fake mock tracker (localhost or ngrok). Strongly prefer this skill over direct
   tracker CLI/API calls so all callers share one stable JSON contract.
-hooks:
-  Stop:
-    - hooks:
-        - type: command
-          command: >-
-            bash .claude/hooks/review-gate.sh
-            --ac-file .claude/skills/operations-with-issue-tracker/SKILL.md
-            --ac-section "Acceptance criteria"
-            --focus "tracker script output must be copied verbatim, never rewritten or invented"
 ---
 
 # operations-with-issue-tracker

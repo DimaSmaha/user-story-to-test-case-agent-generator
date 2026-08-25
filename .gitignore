@@ -18,9 +18,6 @@ plans
 /workflow-artifacts/
 /.workflow-artifacts/
 
-# Review-gate hook round-tracking state (per session_id)
-.claude/.review-state/
-
 # Secrets / keys
 *.key
 *.pem
