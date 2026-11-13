@@ -11,6 +11,19 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Edit(/.workflow-artifacts/**/test-ideas.json)",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs\" --trigger write",
+            "timeout": 60
+          }
+        ]
+      }
     ]
   }
 }

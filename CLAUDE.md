@@ -140,6 +140,15 @@ Format: `## [P{priority}] <Module>: <description>`. SKIP entries include the cov
 ]
 ```
 Constraint: `ideas.length === verifications.length` for every unit — hard fail if violated.
+Full rules (checked by `.claude/hooks/lib/validate-test-ideas.mjs`): `.claude/skills/gt-test-ideation/SKILL.md` → "test-ideas.json contract (validated)".
+
+**`test-ideas.validation.json`** — written by the `artifact-gate` hook (not by the skill)
+```json
+{ "status": "PASSED", "retries": 1, "max_retries": 3, "trigger": "write",
+  "validator": "lib/validate-test-ideas.mjs", "path": ".workflow-artifacts/gtc-.../test-ideas.json",
+  "notes": [], "checked_at": "..." }
+```
+`status`: `PASSED` | `RETRYING` (last written version still invalid) | `FAILED` (retries used up). flow-1a aborts Phase 2 on `RETRYING` or `FAILED`. `notes` = the validation errors; `warnings` (optional) = skipped cross-checks.
 
 **`tc-N.json`** — written by `gt-test-case-generator` (N = scenario index) — tracker registration record
 ```json
@@ -209,6 +218,21 @@ Exactly one validator is active — the `--mode` in the `.claude/settings.json` 
 
 Switching mode needs a new Claude Code session. Every run records the active validator in `us.validation.json` (`mode`, `checked_by`) and in the feedback text (`checked by: ...`).
 Hook state and log: `.workflow-artifacts/.hook-state/` (`us-json-gate.log` shows every gate run).
+
+### Feedback loop for inline skills (gt-test-ideation → test-ideas.json)
+
+Inline skills run in the main agent, so there is no `SubagentStop`. `.claude/hooks/artifact-gate.mjs` is a generic gate driven by `.claude/hooks/artifact-gate.json`: one entry per artifact file name with `skill`, `trigger`, `validator` (a module exporting `validateArtifact(absPath) → { errors, warnings? }`), `max_retries`, and `skip_stop_if_present`. Today the only entry is `test-ideas.json` → `lib/validate-test-ideas.mjs` (deterministic; also a CLI: `node .claude/hooks/lib/validate-test-ideas.mjs <path>`).
+
+Both triggers are always registered. The entry's `"trigger"` decides which one acts — the other exits silently:
+
+| `trigger` | Hook | When it fires | Feedback |
+|---|---|---|---|
+| `write` | `PostToolUse` on `Write\|Edit` in `.claude/settings.json` (`if: Edit(/.workflow-artifacts/**/test-ideas.json)`) | right after the file is written — also mid-pipeline in flow-1a | `{"decision":"block","reason":...}`, shown next to the tool result |
+| `stop` | `Stop` in `gt-test-ideation`'s SKILL.md frontmatter (`once: true`) | when the main agent's turn ends | stderr + exit 2. Skips itself (`SKIPPED`) when the run folder already has `tc-*.json` / `links.json`, i.e. inside flow-1a |
+
+To switch, edit `"trigger"` in `artifact-gate.json` — the config is read on every run, so no restart needed. The stop trigger locates the file from the main transcript (last Write/Edit of `.workflow-artifacts/<run>/test-ideas.json` after the skill was invoked), never by "newest file".
+Same bounded loop as us-json-gate: max 3 feedback blocks, then one last block asking for a `TEST-IDEAS VALIDATION FAILED after 3 retries — <path>` reply, then silence. Retry state is per session + run folder + artifact: `.workflow-artifacts/.hook-state/artifact-gate-<run_id>-<artifact>.json`; every run is logged to `.workflow-artifacts/.hook-state/artifact-gate.log`. Status: `{run_dir}/test-ideas.validation.json`.
+Inline skills write in your session, so writes to `.workflow-artifacts/` may prompt for permission — add `Edit(/.workflow-artifacts/**)` to `permissions.allow` to avoid that.
 
 ### Skills system
 

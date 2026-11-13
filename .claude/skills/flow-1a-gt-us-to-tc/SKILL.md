@@ -126,7 +126,17 @@ Checkpoint: `✓ App explored: N pages visited, M potential bugs found`
 
 Invoke `gt-test-ideation` with `us.json` and `scenarios.md`.
 
-- Resume-skip: `test-ideas.json` exists
+`test-ideas.json` is checked by `.claude/hooks/artifact-gate.mjs` (active trigger set in
+`.claude/hooks/artifact-gate.json`). With trigger `write` it runs on every Write/Edit of the file and
+sends feedback right there (max 3 retries). After the skill returns, read
+`{run_dir}/test-ideas.validation.json`:
+- `status: "FAILED"` → **abort** and report its `notes`
+- `status: "RETRYING"` → **abort** and report its `notes` — the last written version is still invalid
+  (a write-trigger block cannot force a rewrite)
+- `PASSED` / file absent → continue. The file is absent when the trigger is `stop`: that hook only
+  fires when this whole turn ends, and then skips itself because the run is past ideation.
+
+- Resume-skip: `test-ideas.json` exists and `test-ideas.validation.json.status` is not `FAILED` / `RETRYING`
 - Success → emit compact block → continue to Phase 2.5
 - **Abort on failure** (no ideas to generate TCs from)
 
