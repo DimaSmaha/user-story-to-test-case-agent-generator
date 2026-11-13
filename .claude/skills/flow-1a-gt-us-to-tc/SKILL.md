@@ -73,9 +73,20 @@ Confirm `ISSUE_TRACKER` and `FAKE_TRACKER_URL` (or tracker-specific vars) are se
 
 ### Phase 1 — Plan (`gt-story-planner`)
 
-Invoke `gt-story-planner` with the user story input.
+Invoke `gt-story-planner` — it runs in its own `story-planner` subagent and cannot
+see this conversation, so pass everything as arguments:
+```
+Skill: gt-story-planner  args: --run-id <run_id> --us-id <id>
+Skill: gt-story-planner  args: --run-id <run_id> --us-text "<title + description>"
+```
 
-- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}`
+On finish, the `SubagentStop` hook (`.claude/hooks/us-json-gate.mjs`) validates
+`us.json` and sends feedback to the planner (max 3 retries). Afterwards read
+`{run_dir}/us.validation.json`:
+- `status: "FAILED"` → **abort** and report its `notes`
+- `PASSED` / `UNVERIFIED` (reviewer could not run) / file absent → continue
+
+- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}` and `us.validation.json.status` is not `FAILED`
 - Success → emit compact block → continue to Phase 1.5
 - **Abort on failure** (no scenarios to work with)
 
@@ -115,7 +126,17 @@ Checkpoint: `✓ App explored: N pages visited, M potential bugs found`
 
 Invoke `gt-test-ideation` with `us.json` and `scenarios.md`.
 
-- Resume-skip: `test-ideas.json` exists
+`test-ideas.json` is checked by `.claude/hooks/artifact-gate.mjs` (active trigger set in
+`.claude/hooks/artifact-gate.json`). With trigger `write` it runs on every Write/Edit of the file and
+sends feedback right there (max 3 retries). After the skill returns, read
+`{run_dir}/test-ideas.validation.json`:
+- `status: "FAILED"` → **abort** and report its `notes`
+- `status: "RETRYING"` → **abort** and report its `notes` — the last written version is still invalid
+  (a write-trigger block cannot force a rewrite)
+- `PASSED` / file absent → continue. The file is absent when the trigger is `stop`: that hook only
+  fires when this whole turn ends, and then skips itself because the run is past ideation.
+
+- Resume-skip: `test-ideas.json` exists and `test-ideas.validation.json.status` is not `FAILED` / `RETRYING`
 - Success → emit compact block → continue to Phase 2.5
 - **Abort on failure** (no ideas to generate TCs from)
 
@@ -181,6 +202,7 @@ After the skill returns, count `tc-*.json` files present in `{run_dir}`. If the 
 - Resume-skip: batch script skips indices where `tc-{index}.json` already exists
 - Individual scenario failure → logged per scenario, pipeline continues
 - All 3 invocations exhausted with missing TCs → log → continue to Phase 4 with whatever tc files exist
+- Validation: the skill's `tc-gate` hook reviews each successful script run with one LLM call and may return `tc validation FAILED (retry N/3)` feedback — follow it as the skill's "Validation feedback" section says. `tc.validation.json` `RETRYING` / `FAILED` / `UNVERIFIED` → log it and continue to Phase 3.5; never abort
 
 Checkpoint: `✓ Test cases generated: N / M scenarios`
 

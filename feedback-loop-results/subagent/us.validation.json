@@ -1,0 +1,11 @@
+{
+  "max_retries": 3,
+  "status": "FAILED",
+  "retries": 3,
+  "mode": "subagent",
+  "checked_by": "subagent (us-json-reviewer.md)",
+  "notes": [
+    "us.json: not found at .workflow-artifacts/gtc-20261111-111111/us.json → write it there before finishing"
+  ],
+  "checked_at": "2026-11-11T11:11:11.111Z"
+}

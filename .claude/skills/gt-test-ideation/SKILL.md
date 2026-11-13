@@ -5,6 +5,13 @@ description: >
   design units used by test-case generation and spec writing. Use when asked for
   test ideas, test design expansion, or conversion of scenarios into conditions,
   verifications, and navigations.
+hooks:
+  Stop:
+    - hooks:
+        - type: command
+          command: node "$CLAUDE_PROJECT_DIR/.claude/hooks/artifact-gate.mjs" --trigger stop --artifact test-ideas.json
+          timeout: 60
+          once: true
 ---
 
 # gt-test-ideation
@@ -74,7 +81,8 @@ ideas.length === verifications.length
 ```
 
 If they do not match — **stop and fix before continuing**. This constraint is
-enforced by downstream skills.
+enforced by downstream skills, and by the validation hook (see
+"test-ideas.json contract (validated)" below).
 
 ### 6. Write test-ideas.json
 
@@ -114,6 +122,43 @@ for review — one section per scenario with conditions, numbered steps, and ass
 
 - `.workflow-artifacts/{run_id}/test-ideas.json`
 - `.workflow-artifacts/{run_id}/test-ideas.md`
+- `.workflow-artifacts/{run_id}/test-ideas.validation.json` — written by the validation hook, not by you
+
+## test-ideas.json contract (validated)
+
+`.claude/hooks/artifact-gate.mjs` checks `test-ideas.json` with the deterministic validator
+`.claude/hooks/lib/validate-test-ideas.mjs`. The file passes only if:
+
+- It is a non-empty JSON array of objects (units).
+- `index` is an integer equal to the unit's position (0 … n-1).
+- `scenario` is a non-empty string starting with `[P<n>] ` — the `scenarios.md` heading text without `## `.
+- `conditions`, `ideas`, `verifications`, `navigations` are arrays with at least one item, each a non-empty string.
+- **`verifications.length === ideas.length`** for every unit.
+- `ac_trace` has at least one non-empty string. An item that starts with `ACn:` must name an existing
+  criterion: `n` is the 1-based position in `us.json.ac`.
+- `reusable_helpers` is an array of non-empty strings; `[]` when none apply.
+- Coverage: every `## [P…]` heading in the same run folder's `scenarios.md` appears exactly once as a
+  unit's `scenario`, in the same order, and no unit has a scenario that is not a heading there.
+  `[SKIP]` headings and Exploratory Charters are ignored.
+
+## Validation feedback
+
+The active trigger is set in `.claude/hooks/artifact-gate.json` (`"trigger"`):
+- `write` — a `PostToolUse` hook checks the file right after each Write/Edit of it; feedback appears
+  next to that tool result.
+- `stop` — the `Stop` hook in this skill's frontmatter checks it when your turn ends; feedback arrives
+  as a stop-hook message. Inside `flow-1a` it skips itself (the run folder is already past ideation).
+
+When feedback starting with `test-ideas.json validation FAILED (retry N/3)` arrives:
+1. Fix `test-ideas.json` **in place** — same run folder, same path — so every listed point is resolved.
+   Do not start a new run folder.
+2. Update `test-ideas.md` to match.
+3. If you cannot fix it (e.g. `scenarios.md` or `us.json` themselves are wrong, or a tool is denied),
+   stop and say why.
+
+When the feedback says all retries are used up: stop fixing, and reply with a message that starts with
+`TEST-IDEAS VALIDATION FAILED after 3 retries — <path>` followed by the unresolved problems.
+The status is recorded in `{run_dir}/test-ideas.validation.json`.
 
 ## Hard rules
 

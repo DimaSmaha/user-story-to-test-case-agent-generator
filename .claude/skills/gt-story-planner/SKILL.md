@@ -5,6 +5,9 @@ description: >
   normalized planning artifacts for test generation. Use when asked to plan tests
   for a user story, break a story into scenarios, or prepare scenario coverage
   before writing Playwright tests.
+context: fork
+agent: story-planner
+background: false
 ---
 
 # gt-story-planner
@@ -12,17 +15,51 @@ description: >
 Convert a user story into `us.json` and `scenarios.md` — the planning inputs for
 downstream test ideation and spec generation.
 
+> This skill runs in its own `story-planner` subagent (`context: fork`) and does
+> not see the caller's conversation. Everything it needs comes from the arguments.
+
 ## Inputs
 
-Either:
-- A user story ID (fetched from the tracker), or
-- User story title + description/acceptance criteria pasted directly
+Arguments: $ARGUMENTS
 
-If neither is provided, ask:
+- `--run-id <run_id>` — artifact directory name. If absent, generate one:
+  ```bash
+  run_id="gtc-$(date +%Y%m%d-%H%M%S)"
+  mkdir -p ".workflow-artifacts/${run_id}"
+  ```
+- Plus either:
+  - `--us-id <id>` — user story ID (fetched from the tracker), or
+  - `--us-text "<title + description/AC>"` — story pasted directly. A bare ID or
+    pasted text without a flag is accepted too.
+
+If neither a story ID nor story text is provided, **stop** and report:
 
 ```text
-Please provide a user story ID or paste the title and description/AC directly.
+gt-story-planner requires --us-id <id> or --us-text "<story>".
 ```
+
+Never ask the user — this skill runs autonomously.
+
+## us.json contract (validated on finish)
+
+When this skill finishes, the `SubagentStop` hook `.claude/hooks/us-json-gate.mjs`
+checks `us.json` with one validator (reviewer subagent, deterministic script, or a
+single LLM call — set by `--mode` in `.claude/settings.json`). Every rule must hold:
+
+| Field | Rule |
+|---|---|
+| `id` | non-empty **string** — tracker id as a string (`"114"`, not `114`), or `"manual"` for pasted text |
+| `title` | non-empty string — the story title exactly as in the tracker / pasted text |
+| `description` | string — the full story description, not a summary |
+| `ac` | array with ≥ 1 item, every item a non-empty string; taken from the tracker AC list, or derived from the description only when the tracker has none — never invented; no placeholders, no duplicates |
+| `url` | tracker URL string; `null` only when `id` is `"manual"` |
+
+Extra keys (e.g. `notes`) are allowed.
+
+If the hook sends feedback (`us.json validation FAILED (retry N/3)`), fix
+`us.json` **in place** at the same path, update `scenarios.md` if the ACs
+changed, then finish again. After 3 failed retries the run is marked `FAILED`
+in `.workflow-artifacts/{run_id}/us.validation.json`.
 
 ## Workflow
 
@@ -35,12 +72,16 @@ Run preflight if not already done:
 bash .claude/skills/operations-with-issue-tracker/scripts/preflight.sh
 ```
 
-Fetch the story:
+Fetch the story and keep the raw tracker response — the us.json reviewer compares
+against it:
 ```bash
-bash .claude/skills/operations-with-issue-tracker/scripts/get.sh --id <id>
+bash .claude/skills/operations-with-issue-tracker/scripts/get.sh --id <id> > .workflow-artifacts/<run_id>/tracker-source.json
 ```
+Never edit `tracker-source.json` — it must stay the tracker's verbatim output.
 
-Write the result to `.workflow-artifacts/{run_id}/us.json`.
+Map it to the us.json contract above (`id` as a string, `ac` from `acl`, or derived
+from `description` when `acl` is empty, `url` from the tracker) and write
+`.workflow-artifacts/{run_id}/us.json`.
 
 **If text was pasted:**
 
@@ -165,8 +206,16 @@ SKIP entries include the path of the covering spec.
 
 ## Output
 
+- `.workflow-artifacts/{run_id}/tracker-source.json` — raw `get.sh` output (ID input only)
 - `.workflow-artifacts/{run_id}/us.json`
 - `.workflow-artifacts/{run_id}/scenarios.md` (includes scenario list + `## Exploratory Charters` section)
+- `.workflow-artifacts/{run_id}/us.validation.json` — written by the finish hook, not by this skill
+
+Final message — a single handoff line for the caller:
+
+```text
+run_id=<run_id> us_id=<id> title="<title>" scenario_count=<N>
+```
 
 ## Hard rules
 

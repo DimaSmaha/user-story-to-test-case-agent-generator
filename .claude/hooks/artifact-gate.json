@@ -1,0 +1,9 @@
+{
+  "test-ideas.json": {
+    "skill": "gt-test-ideation",
+    "trigger": "write",
+    "validator": "lib/validate-test-ideas.mjs",
+    "max_retries": 3,
+    "skip_stop_if_present": ["tc-*.json", "links.json"]
+  }
+}
