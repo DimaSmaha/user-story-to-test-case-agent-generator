@@ -73,9 +73,20 @@ Confirm `ISSUE_TRACKER` and `FAKE_TRACKER_URL` (or tracker-specific vars) are se
 
 ### Phase 1 — Plan (`gt-story-planner`)
 
-Invoke `gt-story-planner` with the user story input.
+Invoke `gt-story-planner` — it runs in its own `story-planner` subagent and cannot
+see this conversation, so pass everything as arguments:
+```
+Skill: gt-story-planner  args: --run-id <run_id> --us-id <id>
+Skill: gt-story-planner  args: --run-id <run_id> --us-text "<title + description>"
+```
 
-- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}`
+On finish, the `SubagentStop` hook (`.claude/hooks/us-json-gate.mjs`) validates
+`us.json` and sends feedback to the planner (max 3 retries). Afterwards read
+`{run_dir}/us.validation.json`:
+- `status: "FAILED"` → **abort** and report its `notes`
+- `PASSED` / `UNVERIFIED` (reviewer could not run) / file absent → continue
+
+- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}` and `us.validation.json.status` is not `FAILED`
 - Success → emit compact block → continue to Phase 1.5
 - **Abort on failure** (no scenarios to work with)
 

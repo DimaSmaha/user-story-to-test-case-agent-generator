@@ -133,20 +133,6 @@ With fake tracker: `{"id":0,"url":"http://localhost:3000/bugs/create","deduped":
 4. Keep caller logic tracker-agnostic — adapter scripts handle tracker specifics.
 5. With the fake tracker, `id:0` on create is expected and valid.
 
-## Acceptance criteria
-
-Checked by the Stop-hook review gate (`.claude/hooks/review-gate.sh`) before a
-session using this skill is allowed to end:
-
-1. Every script's stdout JSON is passed on to the caller **verbatim** — never
-   paraphrased, reformatted, summarized, or invented.
-2. `{"id":0,...}` from the fake tracker on create is treated as success, not
-   an error, and is not "corrected" or replaced with a fabricated ID.
-3. `{"error":...}` output is surfaced as-is, not silently swallowed or
-   rewritten into a different message.
-4. No tracker field, ID, or URL appearing in downstream artifacts was
-   introduced by the caller instead of read from a script's actual output.
-
 ## References
 
 - Detailed contracts: `references/tracker-schema.md`

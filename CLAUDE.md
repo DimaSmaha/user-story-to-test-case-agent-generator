@@ -76,6 +76,15 @@ Each stage reads the previous stage's artifact from `.workflow-artifacts/{run_id
 ```
 When story text is pasted directly: `"id": "manual"`, `"url": null`.
 
+**`tracker-source.json`** — written by `gt-story-planner` (ID input only): the verbatim `get.sh` output. Never edited; the us.json reviewer uses it as the source of truth.
+
+**`us.validation.json`** — written by the `us-json-gate` hook (not by the skill)
+```json
+{ "max_retries": 3, "status": "PASSED", "retries": 1, "mode": "subagent",
+  "checked_by": "subagent (us-json-reviewer.md)", "notes": [], "checked_at": "..." }
+```
+`status`: `PASSED` | `RETRYING` | `FAILED` (flow-1a aborts) | `UNVERIFIED` (reviewer could not run).
+
 **`exploration.json`** — written by Phase 1.5 (app exploration)
 ```json
 {
@@ -186,6 +195,20 @@ Fields retained per phase:
 | `gt-test-ideation` (2) | `total_ideas`, `scenario_count` |
 | Bug reporting (2.5) | `bugs_filed`, `bugs_failed` |
 | `gt-test-case-generator` (3) | `tc_id`, `scenario_index`, `title`, `deduped` |
+
+### Feedback loop (gt-story-planner → us.json)
+
+`gt-story-planner` forks into the `story-planner` subagent (`context: fork`). A `SubagentStop` hook in `.claude/settings.json` runs `.claude/hooks/us-json-gate.mjs`, which checks `us.json` and, on failure, blocks the stop with feedback the planner must fix (max 3 retries, counted per `agent_id`).
+Exactly one validator is active — the `--mode` in the `.claude/settings.json` hook command:
+
+| `--mode` | Validator | Code |
+|---|---|---|
+| `subagent` | `.claude/agents/us-json-reviewer.md` run as an agent via `claude -p --agent us-json-reviewer` (needs `claude` on PATH; Read tool, multi-turn; prompt is just `Review <path>`, it reads `us.json` + `tracker-source.json` itself) | `.claude/hooks/lib/review-us-json-subagent.mjs` |
+| `script` | deterministic contract check, no LLM (also a CLI: `node .claude/hooks/lib/validate-us-json.mjs <path>`) | `.claude/hooks/lib/validate-us-json.mjs` |
+| `llm` | one LLM call, no tools, `us.json` + `tracker-source.json` pasted in; rules = body of `us-json-reviewer.md` | `.claude/hooks/lib/review-us-json-llm.mjs` |
+
+Switching mode needs a new Claude Code session. Every run records the active validator in `us.validation.json` (`mode`, `checked_by`) and in the feedback text (`checked by: ...`).
+Hook state and log: `.workflow-artifacts/.hook-state/` (`us-json-gate.log` shows every gate run).
 
 ### Skills system
 

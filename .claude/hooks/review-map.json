@@ -1,3 +1,0 @@
-[
-  { "name": "operations-with-issue-tracker", "match": "operations-with-issue-tracker/scripts/", "ac_file": ".claude/skills/operations-with-issue-tracker/SKILL.md", "ac_section": "Acceptance criteria", "focus": "tracker script output must be copied verbatim, never rewritten or invented" }
-]

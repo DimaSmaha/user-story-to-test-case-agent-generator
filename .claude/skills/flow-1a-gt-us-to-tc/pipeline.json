@@ -18,7 +18,7 @@
       "label": "Plan",
       "skill": "gt-story-planner",
       "reads": [],
-      "writes": ["us.json", "scenarios.md"],
+      "writes": ["tracker-source.json", "us.json", "scenarios.md"],
       "resume_skip_if": "us.json",
       "on_failure": "stop"
     },

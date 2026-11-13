@@ -1,9 +1,14 @@
 {
   "hooks": {
-    "Stop": [
+    "SubagentStop": [
       {
+        "matcher": "^story-planner$",
         "hooks": [
-          { "type": "command", "command": "bash .claude/hooks/review-gate.sh" }
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude/hooks/us-json-gate.mjs\" --mode script",
+            "timeout": 240
+          }
         ]
       }
     ]
