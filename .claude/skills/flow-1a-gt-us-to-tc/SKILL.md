@@ -202,6 +202,7 @@ After the skill returns, count `tc-*.json` files present in `{run_dir}`. If the 
 - Resume-skip: batch script skips indices where `tc-{index}.json` already exists
 - Individual scenario failure → logged per scenario, pipeline continues
 - All 3 invocations exhausted with missing TCs → log → continue to Phase 4 with whatever tc files exist
+- Validation: the skill's `tc-gate` hook reviews each successful script run with one LLM call and may return `tc validation FAILED (retry N/3)` feedback — follow it as the skill's "Validation feedback" section says. `tc.validation.json` `RETRYING` / `FAILED` / `UNVERIFIED` → log it and continue to Phase 3.5; never abort
 
 Checkpoint: `✓ Test cases generated: N / M scenarios`
 

@@ -5,6 +5,14 @@ description: >
   and structured steps artifacts. Use when asked to generate test cases from
   test-ideas.json, create QA test steps, or publish scenario-level test cases to
   the issue tracker with dedupe and resume safety.
+hooks:
+  PostToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          if: "Bash(bash .claude/skills/gt-test-case-generator/scripts/*)"
+          command: node "$CLAUDE_PROJECT_DIR/.claude/hooks/tc-gate.mjs" --model sonnet
+          timeout: 240
 ---
 
 # gt-test-case-generator
@@ -45,7 +53,8 @@ bash .claude/skills/gt-test-case-generator/scripts/generate-tc.sh \
   --run-dir  ".workflow-artifacts/${run_id}"
 ```
 
-Optionally pass `--us-id <id>` if `us.json` has a non-manual tracker ID.
+Pass `--us-id <us.json.id>` whenever `us.json.id` is not `"manual"` — otherwise `parent_us_id`
+falls back to `"manual"` (acceptance criterion 4). Same for the batch script below.
 
 The script:
 1. Reads `.ideas[]` and `.verifications[]` from the selected scenario verbatim
@@ -80,6 +89,58 @@ The batch script:
 
 The script is idempotent: if `tc-<n>.json` already exists for a given index it
 returns immediately without re-creating or re-uploading.
+
+## Output
+
+- `.workflow-artifacts/{run_id}/tc-<n>.json`, `tc-steps-<n>.md`, `tc-steps-<n>.xml` — per scenario index
+- `.workflow-artifacts/{run_id}/tc.validation.json` — written by the validation hook, not by you
+
+## Acceptance criteria (LLM-reviewed)
+
+After each successful run of either script, the `tc-gate` hook pastes this stage's output into one
+LLM call that judges it against the rules below (see "Validation feedback"). For every in-scope
+scenario index `N` (`--index N`, or every index of `test-ideas.json` for the batch script):
+
+1. **Coverage** — `tc-N.json` exists for every in-scope `N`; no `tc-*.json` has an index outside `test-ideas.json`.
+2. `tc-N.json.scenario_index` is the integer `N`.
+3. `tc-N.json.title` is exactly `test-ideas[N].scenario` — verbatim, including the `[Pn] ` prefix.
+4. `tc-N.json.parent_us_id` equals `us.json.id` (compared as strings). `"manual"` only when `us.json.id` is `"manual"`.
+5. `tc-N.json.tracker_id` is not null (`0` is valid on the fake tracker). `reused: true` only when
+   `reconciliation.json` has `action: "update"` for `N`, and then `tracker_id` equals its `matched_tracker_id`;
+   otherwise `reused: false` (a failed update falls back to create — that is allowed). `deduped` and `reused` are booleans.
+6. `steps_md_path` / `steps_xml_path` point to `tc-steps-N.md` / `tc-steps-N.xml` in this run folder
+   (relative or absolute form), and both files are present.
+7. `tc-N.json` is a registration record only — no ideation fields (`ideas`, `verifications`, `conditions`,
+   `navigations`, `ac_trace`, `reusable_helpers`).
+8. `tc-steps-N.md` starts with `# <test-ideas[N].scenario>` and has exactly `ideas.length` steps, in order:
+   `Step k: <ideas[k-1]>` followed by `  Expected: <verifications[k-1]>` — both verbatim. No step
+   paraphrased, added, dropped, merged, or reordered.
+
+Not in scope: the test design of `ideas` / `verifications` (wording, coverage, quality). They are this
+stage's inputs, copied as-is — problems there belong to `gt-test-ideation`.
+
+## Validation feedback
+
+`.claude/hooks/tc-gate.mjs` (the `PostToolUse` hook in this skill's frontmatter) runs after every
+successful `generate-tc.sh` / `batch-generate-tc.sh` call. It makes **one direct LLM call** — no tools,
+`.claude/hooks/lib/review-tc-llm.mjs` — with `us.json`, the in-scope `test-ideas.json` units,
+`reconciliation.json`, and every in-scope `tc-N.json` + `tc-steps-N.md` pasted in, and records the
+result in `{run_dir}/tc.validation.json` (`PASSED` | `RETRYING` | `FAILED` | `UNVERIFIED`).
+
+When feedback starting with `tc validation FAILED (retry N/3)` arrives next to the script's output:
+1. Never hand-edit `tc-*.json` or `tc-steps-*` — they are script output.
+2. For each index `N` in the notes: delete `tc-N.json`, `tc-steps-N.md`, `tc-steps-N.xml` from the run
+   folder, then re-run the same script command (resume-safe; `--dedupe-by title` reuses the tracker item
+   instead of duplicating it). Add `--us-id <us.json.id>` if `parent_us_id` was wrong.
+3. If the cause is upstream (`test-ideas.json` itself, the tracker, a denied tool) or a note is plainly
+   wrong about the files, stop and say why instead of regenerating.
+
+When the feedback says all retries are used up: stop regenerating and reply with a message that starts
+with `TC VALIDATION FAILED after 3 retries — <run_dir>` followed by the unresolved problems. Inside
+`flow-1a` this is not an abort — continue with Phase 3.5.
+
+The hook only fires when the script exits 0. A batch run with `[FAIL]` scenarios exits 1 and is not
+reviewed — re-run it (resume-safe), or let flow-1a's re-invoke loop do so.
 
 ## Hard rules
 

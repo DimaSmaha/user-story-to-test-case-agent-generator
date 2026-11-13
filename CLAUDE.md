@@ -166,6 +166,14 @@ Full rules (checked by `.claude/hooks/lib/validate-test-ideas.mjs`): `.claude/sk
 ```
 Ideation fields (`ideas`, `verifications`, `conditions`, etc.) are NOT duplicated here — read from `test-ideas.json[scenario_index]`.
 
+**`tc.validation.json`** — written by the `tc-gate` hook (not by the skill)
+```json
+{ "status": "PASSED", "retries": 0, "max_retries": 3, "trigger": "bash", "script": "batch-generate-tc.sh",
+  "checked_by": "llm call (single, no tools) — lib/review-tc-llm.mjs", "model": "sonnet",
+  "path": ".workflow-artifacts/gtc-...", "indices": [0, 1, 2], "notes": [], "checked_at": "..." }
+```
+`status`: `PASSED` | `RETRYING` | `FAILED` (retries used up) | `UNVERIFIED` (reviewer could not run; `reviewer_error` set). flow-1a never aborts Phase 3 on it.
+
 **`bug-{i}.json`** — written by `ft-bug-reporter` (optional, one per exploration bug)
 ```json
 {
@@ -233,6 +241,14 @@ Both triggers are always registered. The entry's `"trigger"` decides which one a
 To switch, edit `"trigger"` in `artifact-gate.json` — the config is read on every run, so no restart needed. The stop trigger locates the file from the main transcript (last Write/Edit of `.workflow-artifacts/<run>/test-ideas.json` after the skill was invoked), never by "newest file".
 Same bounded loop as us-json-gate: max 3 feedback blocks, then one last block asking for a `TEST-IDEAS VALIDATION FAILED after 3 retries — <path>` reply, then silence. Retry state is per session + run folder + artifact: `.workflow-artifacts/.hook-state/artifact-gate-<run_id>-<artifact>.json`; every run is logged to `.workflow-artifacts/.hook-state/artifact-gate.log`. Status: `{run_dir}/test-ideas.validation.json`.
 Inline skills write in your session, so writes to `.workflow-artifacts/` may prompt for permission — add `Edit(/.workflow-artifacts/**)` to `permissions.allow` to avoid that.
+
+### Feedback loop for gt-test-case-generator (tc-*.json, direct LLM call)
+
+TC files are written by a bash script, not by Write/Edit, so the trigger is the script's Bash call: a `PostToolUse` hook on `Bash` declared in `gt-test-case-generator`'s own SKILL.md frontmatter (`if: Bash(bash .claude/skills/gt-test-case-generator/scripts/*)`) runs `.claude/hooks/tc-gate.mjs --model sonnet`.
+The check is **one direct LLM call** — `.claude/hooks/lib/review-tc-llm.mjs`: Agent SDK `query()`, no tools, `settingSources: []`, structured output `{verdict, notes}`. Pasted in: the command + stdout, `us.json` id, the in-scope `test-ideas.json` units, `reconciliation.json`, every in-scope `tc-N.json` + `tc-steps-N.md`. Rules = the `## Acceptance criteria (LLM-reviewed)` section of the skill's SKILL.md (extracted by heading), so the generator and the reviewer read one contract.
+Run folder = the command's `--run-dir` (fallback: dirname of `--ideas-file`). Scope = `--index N` for `generate-tc.sh`, every index for `batch-generate-tc.sh`.
+Same bounded loop as artifact-gate: max 3 `{"decision":"block"}` feedback blocks, then one last block asking for a `TC VALIDATION FAILED after 3 retries — <run_dir>` reply (inside flow-1a: then continue with Phase 3.5), then silence. Reviewer error → `UNVERIFIED` + `systemMessage`, not counted as a retry. Retry state per session + run folder: `.workflow-artifacts/.hook-state/tc-gate-<run_id>.json`; log: `.workflow-artifacts/.hook-state/tc-gate.log`; status: `{run_dir}/tc.validation.json`.
+Limits: `PostToolUse` only fires when the script exits 0 (a batch with `[FAIL]` scenarios exits 1 → not reviewed; flow-1a's re-invoke loop covers it). The Windows PowerShell fallback (`& $bash -c "bash …"`) is not a `Bash` call, so it is not reviewed.
 
 ### Skills system
 
