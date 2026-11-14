@@ -100,7 +100,7 @@ The same 11 practices as README.md §3, plus one that only matters for LLM judge
 
 **tc**
 
-10. **All 8 acceptance criteria are exact comparisons**, such as "verbatim", "equals" and "is the integer N". That is where LLM judges are weakest. The approach is kept on purpose, so the test set measures it, with two probes (`c2-one-char-price`, `c2-typographic-quotes`).
+10. **All 8 acceptance criteria are exact comparisons**, such as "verbatim", "equals" and "is the integer N". That is where LLM judges are weakest. The approach is kept on purpose, so the test set measures it, with two probes. Measured: `c2-one-char-price` was caught, but `c2-typographic-quotes` was a **false pass** (§7).
 11. **The generator is deterministic, so a retry only helps when the input changed.** Retries can fix:
     - stale `tc-N` files kept by resume-safety after `test-ideas.json` changed
     - a missing `--us-id`
@@ -212,7 +212,7 @@ After the fixes, the only labeled defect that still passes is the documented bli
 | `c2-stale-title` | ✓ BLOCK → PASS | 32.6 + 33.7 s |
 | `c2-paraphrased-step` | ✓ BLOCK → PASS | 31.8 + 33.9 s |
 | `c2-one-char-price` *(probe)* | ✓ BLOCK: caught `$29.90` vs `$29.99` | 39.3 s |
-| `c2-typographic-quotes` *(probe)* | pending: the run was still going at commit time | — |
+| `c2-typographic-quotes` *(probe)* | ✗ **false pass**: `‘Sauce Labs Backpack’` accepted as a verbatim copy of `'Sauce Labs Backpack'` | 88.6 s |
 | `c2-dropped-step` | ✓ BLOCK | 31.7 s |
 | `c3-wrong-parent` | ✓ BLOCK → PASS (after `--us-id`) | 32.0 + 45.5 s |
 | `c3-reused-without-recon` | ✓ BLOCK | 36.4 s |
@@ -230,7 +230,11 @@ After the fixes, the only labeled defect that still passes is the documented bli
 
 ### What the numbers teach
 
-- **The LLM reviewer was right on every labeled case measured.** It caught all 9 defects, including the 1-character price change. It produced no false fails on the two traps: a legitimate `reused: true`, and a weak idea that is out of scope. For a judge that had never run before, that is a good first result. It is still one run of one model: re-run `npm run test:tc-gate` whenever the criteria, the preamble or the model change.
+- **The LLM reviewer got 16 of 17 cases right, and the one miss is the predicted one.** It caught 9 of 10 defects, including the 1-character price change, and produced no false fails on the two traps (a legitimate `reused: true`, and a weak idea that is out of scope).
+  - It **passed curly quotes as "verbatim"**, even though its prompt says *"compare strings character by character"*. That was also its slowest review (88.6 s).
+  - A changed digit changes the *meaning*, so it got caught. A changed quote character keeps the meaning, so it got waved through.
+  - That is the core limit of an LLM judge on exact-match rules, and the strongest argument for the deterministic first layer in §9: one `===` would have caught it.
+  - It is one run of one model: re-run `npm run test:tc-gate` whenever the criteria, the preamble or the model change.
 - **Exact checks cost ~500× more by LLM.** A review takes 27–46 s. The deterministic test-ideas check takes ~60 ms. Every criterion the tc reviewer applies is an exact comparison (§9, first item).
 - **Same input does not mean same wording.** Five identical reviews returned the same FAIL with 4 differently worded notes. A loop that re-asks the judge on unchanged input is gambling. The cache makes identical input give an identical verdict, and makes a no-op re-run nearly free (71 ms).
 - **"One note per violation" is not "one note per problem".** For the old record format (`c3-ideation-fields`) the LLM wrote 6 notes, one per extra field. For `c2-stale-title` it wrote 2 (title and heading), though both have one cause and one fix: regenerate. The deterministic validator now groups by problem (A2). The LLM follows its prompt literally.
