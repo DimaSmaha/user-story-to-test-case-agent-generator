@@ -19,13 +19,16 @@
 //
 // Bounded loop per (session, run folder): up to MAX_RETRIES feedback blocks, then one last block asking
 // for a "TC VALIDATION FAILED after N retries — <run_dir>" report, then no more feedback (later runs
-// re-validate silently, so the status can still flip to PASSED).
+// re-validate silently, so the status can still flip to PASSED). A PASS resets the count.
+// Verdict cache: identical evidence (reviewDigest: model + rules + pasted files) in the same session → the last
+// verdict is reused, no model call (`cached: true`). Timing: review_ms in the log and tc.validation.json.
+// Test cases: .claude/hooks/test/run-tc-gate-cases.mjs (npm run test:tc-gate)
 // PostToolUse fires only when the script exits 0; a batch run with [FAIL] scenarios exits 1 → no review.
 // Status: {run_dir}/tc.validation.json     State + log: .workflow-artifacts/.hook-state/
 
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname, relative, isAbsolute, resolve } from "node:path";
-import { reviewTcWithLlm, DEFAULT_MODEL } from "./lib/review-tc-llm.mjs";
+import { reviewTcWithLlm, reviewDigest, DEFAULT_MODEL } from "./lib/review-tc-llm.mjs";
 
 const MAX_RETRIES = 3;
 const MAX_LISTED_NOTES = 20;
@@ -92,17 +95,31 @@ async function main() {
   }
   logContext.indices = compactRange(indices);
 
-  // ── 4. Review (one LLM call) ───────────────────────────────────────────────
-  const stdout = typeof input.tool_response === "string" ? input.tool_response : String(input.tool_response?.stdout ?? "");
-  const review = await reviewTcWithLlm({ projectDir, runDir: runDir.dir, ideas, indices, command, stdout, model });
-  const reviewerError = "error" in review ? review.error : null;
-  const notes = reviewerError ? [] : review.verdict === "FAIL" ? (review.notes.length ? review.notes : ["reviewer returned FAIL without notes"]) : [];
-
-  // ── 5. Retry state (per session + run folder) ──────────────────────────────
+  // ── 4. Retry state (per session + run folder) ──────────────────────────────
   const statePath = join(stateDir, `tc-gate-${safe(runDir.id)}.json`);
   let state = parseJson(readOrNull(statePath));
   if (!state || state.session_id !== sessionId) state = { attempts: 0, reported: false, session_id: sessionId };
   const saveState = () => writeJson(statePath, { ...state, path: runRel, updated_at: new Date().toISOString() });
+
+  // ── 5. Review (one LLM call — unless the evidence is identical to the last review) ──
+  // The script is deterministic and an LLM verdict is not: re-running the command on unchanged files must not
+  // re-roll the judge (or pay for it again). Same digest → reuse the last verdict.
+  const digest = reviewDigest({ projectDir, runDir: runDir.dir, ideas, indices, model });
+  const cached = Boolean(digest && state.last_review?.digest === digest);
+  const t0 = Date.now();
+  let review;
+  if (cached) {
+    review = { verdict: state.last_review.verdict, notes: state.last_review.notes };
+  } else {
+    const stdout = typeof input.tool_response === "string" ? input.tool_response : String(input.tool_response?.stdout ?? "");
+    review = await reviewTcWithLlm({ projectDir, runDir: runDir.dir, ideas, indices, command, stdout, model });
+    if (digest && !("error" in review)) state.last_review = { digest, verdict: review.verdict, notes: review.notes };
+  }
+  const reviewMs = Date.now() - t0;
+  logContext.review_ms = reviewMs;
+  logContext.cached = cached;
+  const reviewerError = "error" in review ? review.error : null;
+  const notes = reviewerError ? [] : review.verdict === "FAIL" ? (review.notes.length ? review.notes : ["reviewer returned FAIL without notes"]) : [];
 
   const validationPath = join(runDir.dir, "tc.validation.json");
   const record = (status, extra = {}) =>
@@ -117,6 +134,8 @@ async function main() {
       path: runRel,
       indices,
       notes,
+      review_ms: reviewMs,
+      cached,
       ...extra,
       checked_at: new Date().toISOString(),
     });
@@ -130,13 +149,18 @@ async function main() {
   }
 
   if (notes.length === 0) {
-    record("PASSED");
+    record("PASSED"); // retries = feedback rounds this fix took
     log({ result: "PASSED", retries: state.attempts });
+    // A pass ends the failure episode: a later failure is a new problem with its own MAX_RETRIES.
+    state.attempts = 0;
+    state.reported = false;
+    saveState(); // also keeps last_review for the cache
     return;
   }
 
   // Failure was already reported: no more feedback, keep the status current.
   if (state.reported) {
+    saveState();
     record("FAILED");
     log({ result: "FAILED_SILENT", retries: state.attempts, notes });
     return;
@@ -156,6 +180,7 @@ async function main() {
         `Checked by: ${CHECKED_BY}, model ${model} — against "Acceptance criteria (LLM-reviewed)" in gt-test-case-generator/SKILL.md`,
         ...listed,
         ``,
+        ...(cached ? [`The files are unchanged since the last review, so its verdict was reused: re-running the command without deleting them cannot change the result.`] : []),
         `Do not hand-edit tc-*.json or tc-steps-* — they are script output. For each index N above: delete`,
         `tc-N.json, tc-steps-N.md and tc-steps-N.xml in ${runRel}, then re-run the same script command`,
         `(resume-safe; --dedupe-by title reuses the tracker item). Add --us-id <us.json id> if parent_us_id is wrong.`,

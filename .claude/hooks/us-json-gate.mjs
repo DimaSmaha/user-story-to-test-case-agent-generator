@@ -30,6 +30,7 @@ import { homedir } from "node:os";
 import { validateUsJsonFile } from "./lib/validate-us-json.mjs";
 import { reviewWithSubagent } from "./lib/review-us-json-subagent.mjs";
 import { reviewWithLlm } from "./lib/review-us-json-llm.mjs";
+import { declaredBlocker } from "./lib/declared-blocker.mjs"; // "BLOCKED: <reason>" in the final message (shared with artifact-gate)
 
 const MAX_RETRIES = 3;
 const VALIDATORS = {
@@ -195,34 +196,6 @@ function locateRunDir(transcript) {
   }
   const dir = tiers.find((t) => t.length)?.at(-1);
   return dir ? join(projectDir, ".workflow-artifacts", dir) : null;
-}
-
-// ── declared blocker ────────────────────────────────────────────────────────
-
-/**
- * The "BLOCKED: <reason>" line from the planner's final message, or null. Reads the hook input's
- * last_assistant_message (the docs' recommended source — the transcript file may lag at stop time),
- * falling back to the last assistant text in the transcript. Tolerates markdown such as **BLOCKED:**.
- */
-function declaredBlocker(input, transcript) {
-  const text = typeof input.last_assistant_message === "string" ? input.last_assistant_message : lastAssistantText(transcript);
-  for (const raw of String(text ?? "").split(/\r?\n/)) {
-    const line = raw.replace(/^[\s>*_`#-]+/, "").replace(/[*_`]+/g, "").trim();
-    if (/^BLOCKED:\s*\S/i.test(line)) return line.slice(0, 500);
-  }
-  return null;
-}
-
-function lastAssistantText(transcript) {
-  for (let i = transcript.length - 1; i >= 0; i--) {
-    const e = transcript[i];
-    if (e?.type !== "assistant") continue;
-    const content = e.message?.content;
-    if (typeof content === "string") return content;
-    const text = Array.isArray(content) ? content.filter((b) => b?.type === "text").map((b) => b.text).join("\n") : "";
-    if (text) return text;
-  }
-  return "";
 }
 
 // ── transcript helpers ──────────────────────────────────────────────────────

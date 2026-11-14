@@ -1,0 +1,19 @@
+{
+  "description": "unit[0].ac_trace says \"AC2: <text of AC1>\" — the label points at the wrong criterion. Real runs quote us.json.ac[n-1] verbatim (60/60 items in 3 runs), so this is checkable without an LLM.",
+  "expect": {
+    "write": [
+      "BLOCK",
+      "PASS"
+    ],
+    "stop": [
+      "BLOCK",
+      "PASS"
+    ]
+  },
+  "assert": {
+    "*": {
+      "notes_count": 1,
+      "notes_match": "AC2"
+    }
+  }
+}

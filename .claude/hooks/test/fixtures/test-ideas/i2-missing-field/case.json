@@ -1,0 +1,19 @@
+{
+  "description": "unit[2] has no navigations field. Fixed file restores it.",
+  "expect": {
+    "write": [
+      "BLOCK",
+      "PASS"
+    ],
+    "stop": [
+      "BLOCK",
+      "PASS"
+    ]
+  },
+  "assert": {
+    "*": {
+      "notes_count": 1,
+      "notes_match": "unit\\[2\\]\\.navigations"
+    }
+  }
+}

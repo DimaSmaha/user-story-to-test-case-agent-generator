@@ -1,0 +1,13 @@
+{
+  "description": "tc-1 was generated from an older test-ideas.json (scenario renamed since). The script is resume-safe, so it kept the stale files. Fix = delete tc-1 files and re-run (regenerate).",
+  "command": "batch",
+  "fix": "regenerate",
+  "expect": [
+    "BLOCK",
+    "PASS"
+  ],
+  "assert": {
+    "notes_match": "tc-1",
+    "retries": 1
+  }
+}

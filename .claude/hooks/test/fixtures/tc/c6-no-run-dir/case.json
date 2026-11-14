@@ -1,0 +1,7 @@
+{
+  "description": "--run-dir points outside .workflow-artifacts/ → the gate cannot locate the run folder; systemMessage, no model call.",
+  "command": "bash .claude/skills/gt-test-case-generator/scripts/batch-generate-tc.sh --ideas-file /tmp/elsewhere/test-ideas.json --run-dir /tmp/elsewhere",
+  "expect": [
+    "NO_RUN_DIR"
+  ]
+}

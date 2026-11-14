@@ -6,8 +6,11 @@
 // generating agent and the reviewer read the same contract.
 //
 // Isolation: settingSources: [] → no hooks, CLAUDE.md, skills or agents are loaded.
+// reviewDigest() hashes what the reviewer is shown (minus command/stdout) so tc-gate can reuse a verdict for
+// identical evidence instead of asking the model again.
 
 import { readFileSync, readdirSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join, relative } from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -101,11 +104,43 @@ export async function reviewTcWithLlm({ projectDir, runDir, ideas, indices, comm
   }
 }
 
+/**
+ * sha256 of everything the verdict depends on: model, reviewer rules, and the pasted files (buildEvidence).
+ * The command and its stdout are left out — they are context, and differ between re-runs of the same script on
+ * the same files. Equal digest = the reviewer would be shown the same evidence, so tc-gate reuses the last verdict.
+ * @returns {string|null} null when the rules cannot be loaded (the review itself will then report the error)
+ */
+export function reviewDigest({ projectDir, runDir, ideas, indices, model = DEFAULT_MODEL }) {
+  try {
+    const evidence = buildEvidence({ runDir, ideas, indices });
+    const scope = [toRel(projectDir, runDir), compactRange(indices), ideas.length];
+    return createHash("sha256").update(JSON.stringify([model, PREAMBLE, loadCriteria(projectDir), scope, evidence])).digest("hex");
+  } catch {
+    return null;
+  }
+}
+
+const fence = (lang, text) => ["```" + lang, text, "```"].join("\n");
+
 /** Everything the reviewer needs, pasted in — it has no tools. */
 function buildPrompt({ projectDir, runDir, ideas, indices, command, stdout }) {
-  const runRel = toRel(projectDir, runDir);
+  const out = String(stdout ?? "");
+  return [
+    `Review the gt-test-case-generator output in run folder ${toRel(projectDir, runDir)}. You have no tools — everything is pasted below.`,
+    `In-scope scenario indices: ${compactRange(indices)} (test-ideas.json has ${ideas.length} units).`,
+    ``,
+    `## Script command that just ran`,
+    fence("bash", command.trim()),
+    `stdout${out.length > MAX_STDOUT_CHARS ? ` (first ${MAX_STDOUT_CHARS} chars)` : ""}:`,
+    fence("", out.slice(0, MAX_STDOUT_CHARS).trimEnd() || "(empty)"),
+    ``,
+    buildEvidence({ runDir, ideas, indices }),
+  ].join("\n");
+}
+
+/** The file-derived part of the prompt (all the verdict depends on, besides the rules). */
+function buildEvidence({ runDir, ideas, indices }) {
   const scope = new Set(indices);
-  const fence = (lang, text) => ["```" + lang, text, "```"].join("\n");
 
   const us = parseJson(readOrNull(join(runDir, "us.json")));
   const usPart = us && typeof us === "object" ? fence("json", JSON.stringify({ id: us.id }, null, 2)) : "(us.json not found or not valid JSON)";
@@ -144,16 +179,7 @@ function buildPrompt({ projectDir, runDir, ideas, indices, command, stdout }) {
     ].join("\n");
   });
 
-  const out = String(stdout ?? "");
   return [
-    `Review the gt-test-case-generator output in run folder ${runRel}. You have no tools — everything is pasted below.`,
-    `In-scope scenario indices: ${compactRange(indices)} (test-ideas.json has ${ideas.length} units).`,
-    ``,
-    `## Script command that just ran`,
-    fence("bash", command.trim()),
-    `stdout${out.length > MAX_STDOUT_CHARS ? ` (first ${MAX_STDOUT_CHARS} chars)` : ""}:`,
-    fence("", out.slice(0, MAX_STDOUT_CHARS).trimEnd() || "(empty)"),
-    ``,
     `## Files present in the run folder (tc-*)`,
     present.length ? present.join("\n") : "(none)",
     ``,

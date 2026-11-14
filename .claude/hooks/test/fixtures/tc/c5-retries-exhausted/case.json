@@ -1,0 +1,16 @@
+{
+  "description": "The agent re-runs the script without deleting the bad file, 5 times. Same input every time: 3 feedback blocks, the final block, then silence. With the verdict cache only the first call reaches the model.",
+  "command": "batch",
+  "expect": [
+    "BLOCK",
+    "BLOCK",
+    "BLOCK",
+    "FINAL",
+    "SILENT"
+  ],
+  "assert": {
+    "retries": 3,
+    "model_calls": 1,
+    "reason_includes": "TC VALIDATION FAILED after 3 retries"
+  }
+}

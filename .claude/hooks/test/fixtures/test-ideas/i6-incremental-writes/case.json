@@ -1,0 +1,26 @@
+{
+  "description": "The agent builds the file in 3 writes (1 unit, 2 units, 3 units). The write trigger judges every work-in-progress version and spends retries on them; the stop trigger only sees the final file.",
+  "writes": [
+    "test-ideas.part1.json",
+    "test-ideas.part2.json",
+    "test-ideas.json"
+  ],
+  "expect": {
+    "write": [
+      "BLOCK",
+      "BLOCK",
+      "PASS"
+    ],
+    "stop": [
+      "PASS"
+    ]
+  },
+  "assert": {
+    "write": {
+      "retries": 2
+    },
+    "stop": {
+      "retries": 0
+    }
+  }
+}

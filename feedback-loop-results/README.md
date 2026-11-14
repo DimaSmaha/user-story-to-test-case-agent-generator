@@ -1,5 +1,8 @@
 # Feedback loops: gt-story-planner → us.json
 
+> The other three loops (gt-test-ideation with write and stop triggers, gt-test-case-generator with one LLM
+> call) are studied the same way in [test-ideas-and-tc.md](test-ideas-and-tc.md).
+
 A study of the `us.json` feedback loop: how it works, what good practice looks like, what the first
 test runs in this folder did and did not prove, and a repeatable test set for all three validators.
 

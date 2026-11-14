@@ -1,0 +1,17 @@
+{
+  "description": "Stop trigger: the agent cannot fix the file and ends its message with a BLOCKED: line → FAILED at once, no retries burned. The write trigger has no stop to allow, so it is skipped.",
+  "last_message": "test-ideas.json written.\n\nBLOCKED: scenario #1 covers a 7th criterion that us.json does not have — gt-story-planner must be re-run",
+  "expect": {
+    "stop": [
+      "BLOCKED"
+    ]
+  },
+  "skip_reason": {
+    "write": "a PostToolUse block cannot force a fix, so there is nothing to stop early"
+  },
+  "assert": {
+    "stop": {
+      "retries": 0
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "description": "unit[1].scenario paraphrases scenarios.md heading #2 instead of copying it. One problem → the feedback should be ONE note naming the exact heading, not 'copy it or remove the unit' plus 'heading #2 has no unit → add a unit'.",
+  "expect": {
+    "write": [
+      "BLOCK",
+      "PASS"
+    ],
+    "stop": [
+      "BLOCK",
+      "PASS"
+    ]
+  },
+  "assert": {
+    "*": {
+      "notes_count": 1,
+      "notes_match": "Clicking product image on inventory navigates to product details page"
+    }
+  }
+}

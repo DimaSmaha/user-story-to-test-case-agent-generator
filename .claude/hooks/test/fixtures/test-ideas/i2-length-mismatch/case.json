@@ -1,0 +1,20 @@
+{
+  "description": "unit[1] has 3 ideas but 4 verifications — the same defect class as the one logged in the real session (5 vs 6). test-ideas.fixed.json is the corrected file.",
+  "expect": {
+    "write": [
+      "BLOCK",
+      "PASS"
+    ],
+    "stop": [
+      "BLOCK",
+      "PASS"
+    ]
+  },
+  "assert": {
+    "*": {
+      "retries": 1,
+      "notes_count": 1,
+      "notes_match": "ideas has 3 items but verifications has 4"
+    }
+  }
+}

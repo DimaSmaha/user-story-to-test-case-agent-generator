@@ -1,0 +1,11 @@
+{
+  "description": "Probe: one character differs — tc-steps-2.md step 3 expects '$29.90' where test-ideas says '$29.99'. Exact comparison is where an LLM judge is weakest.",
+  "command": "batch",
+  "probe": true,
+  "expect": [
+    "BLOCK"
+  ],
+  "assert": {
+    "notes_match": "29\\.9"
+  }
+}

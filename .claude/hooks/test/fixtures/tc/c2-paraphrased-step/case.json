@@ -1,0 +1,12 @@
+{
+  "description": "tc-steps-1.md step 2 was reworded (hand edit) — criterion 8: verbatim copy.",
+  "command": "batch",
+  "fix": "regenerate",
+  "expect": [
+    "BLOCK",
+    "PASS"
+  ],
+  "assert": {
+    "notes_match": "tc-steps-1"
+  }
+}

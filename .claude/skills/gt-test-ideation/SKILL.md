@@ -135,7 +135,10 @@ for review — one section per scenario with conditions, numbered steps, and ass
 - `conditions`, `ideas`, `verifications`, `navigations` are arrays with at least one item, each a non-empty string.
 - **`verifications.length === ideas.length`** for every unit.
 - `ac_trace` has at least one non-empty string. An item that starts with `ACn:` must name an existing
-  criterion: `n` is the 1-based position in `us.json.ac`.
+  criterion (`n` is the 1-based position in `us.json.ac`), and the text after `ACn: ` must be
+  `us.json.ac[n-1]` verbatim (whitespace may differ).
+- Ground truth: `scenarios.md` and `us.json` must be in the same run folder as `test-ideas.json`. If one is
+  missing, write `test-ideas.json` into the run folder that holds them — never create or edit them yourself.
 - `reusable_helpers` is an array of non-empty strings; `[]` when none apply.
 - Coverage: every `## [P…]` heading in the same run folder's `scenarios.md` appears exactly once as a
   unit's `scenario`, in the same order, and no unit has a scenario that is not a heading there.
@@ -153,12 +156,21 @@ When feedback starting with `test-ideas.json validation FAILED (retry N/3)` arri
 1. Fix `test-ideas.json` **in place** — same run folder, same path — so every listed point is resolved.
    Do not start a new run folder.
 2. Update `test-ideas.md` to match.
-3. If you cannot fix it (e.g. `scenarios.md` or `us.json` themselves are wrong, or a tool is denied),
-   stop and say why.
+3. Each note names one problem and one fix. Do not pad `ideas` / `verifications` with filler items to make
+   the counts match, and do not edit `scenarios.md` / `us.json` to make the file pass.
+4. If you cannot fix it (e.g. `scenarios.md` or `us.json` themselves are wrong, or a tool is denied):
+   do not write a placeholder. With the `write` trigger, stop and say why. With the `stop` trigger, end your
+   final message with a line starting `BLOCKED: <reason>` — the hook then records `FAILED` (with
+   `blocked`) at once instead of sending more feedback.
 
 When the feedback says all retries are used up: stop fixing, and reply with a message that starts with
 `TEST-IDEAS VALIDATION FAILED after 3 retries — <path>` followed by the unresolved problems.
-The status is recorded in `{run_dir}/test-ideas.validation.json`.
+The status is recorded in `{run_dir}/test-ideas.validation.json`. A later passing version resets the
+retry count, so a new problem in the same session gets its own 3 retries.
+
+The `stop` hook is `once: true`: Claude Code removes it after its first run that does not block. If your turn
+ends before `test-ideas.json` is written (e.g. you ask the user something), that run uses it up and a later
+version is not checked — re-invoke the skill, or use the `write` trigger.
 
 ## Hard rules
 

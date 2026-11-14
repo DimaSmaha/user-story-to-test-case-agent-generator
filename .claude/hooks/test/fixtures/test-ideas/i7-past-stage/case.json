@@ -1,0 +1,18 @@
+{
+  "description": "The run folder already has tc-0.json (flow-1a is past ideation). The stop trigger skips itself; the write trigger still checks the write.",
+  "extra_files": {
+    "tc-0.json": {
+      "id": "tc-1",
+      "tracker_id": 0,
+      "scenario_index": 0
+    }
+  },
+  "expect": {
+    "write": [
+      "PASS"
+    ],
+    "stop": [
+      "SKIPPED"
+    ]
+  }
+}

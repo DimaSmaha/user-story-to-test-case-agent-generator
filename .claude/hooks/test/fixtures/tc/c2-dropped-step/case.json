@@ -1,0 +1,10 @@
+{
+  "description": "tc-steps-0.md lost its last step (4 ideas, 3 steps).",
+  "command": "batch",
+  "expect": [
+    "BLOCK"
+  ],
+  "assert": {
+    "notes_match": "tc-steps-0"
+  }
+}

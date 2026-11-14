@@ -1,0 +1,7 @@
+{
+  "description": "False-fail probe: reconciliation.json says index 1 is an update of TEST-1001, and tc-1.json is reused: true with tracker_id TEST-1001. That is correct and must pass.",
+  "command": "batch",
+  "expect": [
+    "PASS"
+  ]
+}

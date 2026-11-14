@@ -1,0 +1,21 @@
+{
+  "description": "scenarios.md and us.json are missing from the run folder (e.g. test-ideas.json written into a new run folder instead of the planner's). Coverage and AC labels cannot be checked — that must not look like a pass.",
+  "remove": [
+    "scenarios.md",
+    "us.json"
+  ],
+  "expect": {
+    "write": [
+      "BLOCK"
+    ],
+    "stop": [
+      "BLOCK"
+    ]
+  },
+  "assert": {
+    "*": {
+      "notes_count": 1,
+      "notes_match": "scenarios\\.md"
+    }
+  }
+}

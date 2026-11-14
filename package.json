@@ -16,7 +16,9 @@
     "typecheck": "tsc --noEmit -p tsconfig.scripts.json",
     "lint": "eslint \"server/**/*.ts\" \"scripts/**/*.ts\" \"helpers/**/*.ts\"",
     "format": "prettier --write \"server/**/*.ts\" \"scripts/**/*.ts\" \"helpers/**/*.ts\"",
-    "test:us-gate": "node .claude/hooks/test/run-us-json-gate-cases.mjs"
+    "test:us-gate": "node .claude/hooks/test/run-us-json-gate-cases.mjs",
+    "test:artifact-gate": "node .claude/hooks/test/run-artifact-gate-cases.mjs",
+    "test:tc-gate": "node .claude/hooks/test/run-tc-gate-cases.mjs"
   },
   "keywords": [],
   "author": "",

@@ -1,0 +1,10 @@
+{
+  "description": "tc-1.json says reused: true, but there is no reconciliation.json (every index is a create) — criterion 5.",
+  "command": "batch",
+  "expect": [
+    "BLOCK"
+  ],
+  "assert": {
+    "notes_match": "reused"
+  }
+}

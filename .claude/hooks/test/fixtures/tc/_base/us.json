@@ -1,0 +1,14 @@
+{
+  "id": "114",
+  "title": "Enable product details navigation from inventory with consistent cart behavior",
+  "description": "Implement the product details experience accessible from the inventory page. When a user clicks on a product name, they should be navigated to a dedicated product details page displaying full product information and maintaining consistent cart functionality. The product details page must include product name, detailed description, price, a larger product image, and an 'Add to cart' button that behaves identically to the one on the inventory page (including state change to 'Remove' when clicked and proper cart count update). A 'Back to products' button should return the user to the inventory page without losing state (e.g., cart contents). The cart icon/button must remain visible and functional, allowing navigation to the cart page at any time. Ensure routing, UI consistency, and state synchronization between inventory and product pages.",
+  "ac": [
+    "Given a user is on the inventory page, when they click on a product name or product image, they are navigated to the dedicated product details page",
+    "Given a user is on the product details page, the page displays the product name, detailed description, price, a larger product image, and an 'Add to Cart' button",
+    "Given a user clicks 'Add to Cart' on the product details page, the button changes to 'Remove' and the cart badge count increments by 1",
+    "Given an item is already in the cart, when the user views that item's product details page, the button shows 'Remove'; clicking it removes the item and decrements the cart count",
+    "Given a user is on the product details page, when they click 'Back to products', they are returned to the inventory page with cart contents preserved",
+    "Given a user is on the product details page, the cart icon is visible and clicking it navigates to the cart page"
+  ],
+  "url": "http://localhost:3000/tasks/114"
+}

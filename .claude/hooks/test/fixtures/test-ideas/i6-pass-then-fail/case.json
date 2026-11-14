@@ -1,0 +1,24 @@
+{
+  "description": "Write trigger: bad → fixed → bad again (a later edit in the same session). The second failure is a new problem: its feedback should say retry 1/3, not 2/3.",
+  "writes": [
+    "test-ideas.json",
+    "test-ideas.fixed.json",
+    "test-ideas.json"
+  ],
+  "expect": {
+    "write": [
+      "BLOCK",
+      "PASS",
+      "BLOCK"
+    ]
+  },
+  "skip_reason": {
+    "stop": "a stop-trigger PASS ends the turn and removes the once-only hook"
+  },
+  "assert": {
+    "write": {
+      "retries": 1,
+      "last_reason_includes": "retry 1/3"
+    }
+  }
+}
