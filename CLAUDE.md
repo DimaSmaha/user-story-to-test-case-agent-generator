@@ -83,7 +83,7 @@ When story text is pasted directly: `"id": "manual"`, `"url": null`.
 { "max_retries": 3, "status": "PASSED", "retries": 1, "mode": "subagent",
   "checked_by": "subagent (us-json-reviewer.md)", "notes": [], "checked_at": "..." }
 ```
-`status`: `PASSED` | `RETRYING` | `FAILED` (flow-1a aborts) | `UNVERIFIED` (reviewer could not run).
+`status`: `PASSED` | `RETRYING` (last checked version invalid, fix never finished — flow-1a aborts) | `FAILED` (flow-1a aborts; `blocked` is set when the planner declared `BLOCKED: <reason>`) | `UNVERIFIED` (reviewer could not run). flow-1a resume-skips Phase 1 only on `PASSED` / `UNVERIFIED`.
 
 **`exploration.json`** — written by Phase 1.5 (app exploration)
 ```json
@@ -225,7 +225,10 @@ Exactly one validator is active — the `--mode` in the `.claude/settings.json` 
 | `llm` | one LLM call, no tools, `us.json` + `tracker-source.json` pasted in; rules = body of `us-json-reviewer.md` | `.claude/hooks/lib/review-us-json-llm.mjs` |
 
 Switching mode needs a new Claude Code session. Every run records the active validator in `us.validation.json` (`mode`, `checked_by`) and in the feedback text (`checked by: ...`).
+A missing run folder / `us.json` is caught by the gate before any validator runs — `checked_by: "gate pre-check (...)"`, no LLM/subagent call.
+Unfixable input (empty story, denied tool): the planner ends its final message with a `BLOCKED: <reason>` line → the gate records `FAILED` (with `blocked`) at once and allows the stop, instead of burning its 3 retries.
 Hook state and log: `.workflow-artifacts/.hook-state/` (`us-json-gate.log` shows every gate run).
+Offline test cases: `npm run test:us-gate` (mode from `.claude/settings.json`; `-- --mode llm|subagent|script` overrides; `-- --verbose` prints each call's feedback). Fixtures: `.claude/hooks/test/fixtures/us-json/<case>/` (`us.json`, `tracker-source.json`, optional `us.fixed.json`, `case.json` with the expected outcome per mode). Write-up and results: `feedback-loop-results/README.md`.
 
 ### Feedback loop for inline skills (gt-test-ideation → test-ideas.json)
 

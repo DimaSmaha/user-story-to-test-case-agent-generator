@@ -50,7 +50,9 @@ export async function reviewWithLlm({ projectDir, usPath }) {
     readOrNull(usAbs) ?? "(file not found)",
     "```",
     ``,
-    source === null ? `${sourcePath}: does not exist (pasted story)` : `${sourcePath}:\n\`\`\`json\n${source}\n\`\`\``,
+    // State only the fact — whether a missing file means "pasted story" or "missing input" is the
+    // rules' call (us-json-reviewer.md: inputs + rule 14), not the prompt's.
+    source === null ? `${sourcePath}: does not exist` : `${sourcePath}:\n\`\`\`json\n${source}\n\`\`\``,
   ].join("\n");
 
   const controller = new AbortController();

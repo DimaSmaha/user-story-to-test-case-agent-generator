@@ -83,10 +83,11 @@ Skill: gt-story-planner  args: --run-id <run_id> --us-text "<title + description
 On finish, the `SubagentStop` hook (`.claude/hooks/us-json-gate.mjs`) validates
 `us.json` and sends feedback to the planner (max 3 retries). Afterwards read
 `{run_dir}/us.validation.json`:
-- `status: "FAILED"` → **abort** and report its `notes`
+- `status: "FAILED"` → **abort** and report its `notes` (and `blocked`, when the planner declared a blocker)
+- `status: "RETRYING"` → **abort** — the last checked `us.json` was invalid and the planner never finished fixing it (e.g. the run was interrupted)
 - `PASSED` / `UNVERIFIED` (reviewer could not run) / file absent → continue
 
-- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}` and `us.validation.json.status` is not `FAILED`
+- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}` and `us.validation.json.status` is `PASSED` or `UNVERIFIED`
 - Success → emit compact block → continue to Phase 1.5
 - **Abort on failure** (no scenarios to work with)
 

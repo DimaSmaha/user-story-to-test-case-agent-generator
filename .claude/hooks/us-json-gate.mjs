@@ -11,8 +11,14 @@
 //   script   → case 2: deterministic contract check, no LLM          lib/validate-us-json.mjs   [default]
 //   llm      → case 3: one LLM call, no tools, content pasted in     lib/review-us-json-llm.mjs
 //
+// Pre-check → a missing run folder / us.json is reported by the gate itself, before any validator
+//        runs (checked_by: "gate pre-check (...)") — no LLM/subagent call is made for it.
 // Fail → {"decision":"block","reason":...} keeps the planner subagent running with the feedback
 //        as its next instruction, at most MAX_RETRIES times per subagent run (agent_id).
+// Blocker → if the planner's final message has a "BLOCKED: <reason>" line (it cannot produce a valid
+//        us.json: empty story, denied tool), the check's failure is recorded as FAILED at once and
+//        the stop is allowed — no retries burned on a condition that will never resolve.
+//        Test cases for all of this: .claude/hooks/test/run-us-json-gate-cases.mjs
 // Then → one last block tells the planner to stop fixing and end with a
 //        "US.JSON VALIDATION FAILED ..." report (that final message is what the caller receives);
 //        us.validation.json gets status FAILED (flow-1a aborts Phase 1 on it). The stop after
@@ -61,13 +67,17 @@ async function main() {
   const usRel = usPath ? toRel(usPath) : null;
 
   // ── Check (exactly one validator, chosen by --mode) ───────────────────────
-  const checkedBy = VALIDATORS[mode];
+  // A missing run folder / us.json is caught by the gate itself before any validator runs —
+  // checked_by says so, so a FAILED record never claims an LLM/subagent review that did not happen.
+  let checkedBy = VALIDATORS[mode];
   let notes = [];
   let reviewerError = null;
 
   if (!usPath) {
+    checkedBy = "gate pre-check (no run folder)";
     notes = ["us.json: no run folder found → write .workflow-artifacts/<run_id>/us.json (the run_id you were given) before finishing"];
   } else if (!existsSync(usPath)) {
+    checkedBy = "gate pre-check (us.json missing)";
     notes = [`us.json: not found at ${usRel} → write it there before finishing`];
   } else if (mode === "script") {
     notes = validateUsJsonFile(usPath).errors;
@@ -94,6 +104,20 @@ async function main() {
     return;
   }
 
+  // The planner declared it cannot produce a valid us.json ("BLOCKED: <reason>" line in its final
+  // message — empty story, denied tool, ...). Blocking again would only burn retries on a condition
+  // that will never resolve, so record FAILED now and let the stop through. Declaring a blocker can
+  // never yield a pass: the outcome is always FAILED, which flow-1a aborts on.
+  const blocker = declaredBlocker(input, transcript);
+  if (blocker) {
+    state.reported = true;
+    writeJson(statePath, { ...state, us_path: usRel, blocked: blocker, updated_at: checkedAt });
+    writeValidation(runDir, { status: "FAILED", retries: state.attempts, mode, checked_by: checkedBy, blocked: blocker, notes, checked_at: checkedAt });
+    log({ us_path: usRel, result: "BLOCKED", retries: state.attempts, blocked: blocker, notes });
+    emit({ systemMessage: `story-planner declared a blocker — us.json marked FAILED without retrying: ${blocker}` });
+    return;
+  }
+
   if (state.attempts < MAX_RETRIES) {
     state.attempts += 1;
     writeJson(statePath, { ...state, us_path: usRel, updated_at: checkedAt });
@@ -108,7 +132,7 @@ async function main() {
         ``,
         `Fix us.json in place (same run_id, same path) so every point above is resolved, then finish again.`,
         `If you change "ac", update scenarios.md so it still covers every AC.`,
-        `If something outside your control blocks the fix (e.g. a denied tool, or the story has no usable content), stop trying and say so in your final message.`,
+        `If something outside your control blocks the fix (e.g. a denied tool, or the story has no usable content), stop trying: do not write a placeholder us.json — end your final message with a line starting "BLOCKED: <reason>".`,
       ]
         .filter((l) => l !== null)
         .join("\n"),
@@ -171,6 +195,34 @@ function locateRunDir(transcript) {
   }
   const dir = tiers.find((t) => t.length)?.at(-1);
   return dir ? join(projectDir, ".workflow-artifacts", dir) : null;
+}
+
+// ── declared blocker ────────────────────────────────────────────────────────
+
+/**
+ * The "BLOCKED: <reason>" line from the planner's final message, or null. Reads the hook input's
+ * last_assistant_message (the docs' recommended source — the transcript file may lag at stop time),
+ * falling back to the last assistant text in the transcript. Tolerates markdown such as **BLOCKED:**.
+ */
+function declaredBlocker(input, transcript) {
+  const text = typeof input.last_assistant_message === "string" ? input.last_assistant_message : lastAssistantText(transcript);
+  for (const raw of String(text ?? "").split(/\r?\n/)) {
+    const line = raw.replace(/^[\s>*_`#-]+/, "").replace(/[*_`]+/g, "").trim();
+    if (/^BLOCKED:\s*\S/i.test(line)) return line.slice(0, 500);
+  }
+  return null;
+}
+
+function lastAssistantText(transcript) {
+  for (let i = transcript.length - 1; i >= 0; i--) {
+    const e = transcript[i];
+    if (e?.type !== "assistant") continue;
+    const content = e.message?.content;
+    if (typeof content === "string") return content;
+    const text = Array.isArray(content) ? content.filter((b) => b?.type === "text").map((b) => b.text).join("\n") : "";
+    if (text) return text;
+  }
+  return "";
 }
 
 // ── transcript helpers ──────────────────────────────────────────────────────

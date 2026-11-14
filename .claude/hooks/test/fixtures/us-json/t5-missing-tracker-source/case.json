@@ -1,0 +1,13 @@
+{
+  "description": "T5 (missing ground truth) — us.json for tracker story 114 exists, but tracker-source.json is not in the run folder (an older skill version did not save it; see the first subagent run in feedback-loop-results/README.md §4.5). The only right fix is to restore tracker-source.json with get.sh — never to turn the story into a \"manual\" one. us.fixed.json is not used: the fix is a new file, not a us.json change.",
+  "expect": {
+    "script": ["BLOCK"],
+    "llm": ["BLOCK"],
+    "subagent": ["BLOCK"]
+  },
+  "assert": {
+    "script": { "notes_count": 1, "notes_match": "tracker-source" },
+    "llm": { "notes_match": "tracker-source" },
+    "subagent": { "notes_match": "tracker-source" }
+  }
+}

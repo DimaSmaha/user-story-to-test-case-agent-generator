@@ -1,0 +1,11 @@
+{
+  "description": "T7 — pasted story (--us-text): id \"manual\", url null, no tracker-source.json, ACs taken from the pasted text. Fidelity rules are skipped; every validator must pass it.",
+  "expect": {
+    "script": ["PASS"],
+    "llm": ["PASS"],
+    "subagent": ["PASS"]
+  },
+  "assert": {
+    "*": { "retries": 0 }
+  }
+}

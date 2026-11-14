@@ -17,8 +17,10 @@ arrive as the user message — follow them exactly.
 - When you finish, a validation hook checks `us.json`. If it sends back
   feedback, fix `us.json` in place at the same path (and `scenarios.md` if the
   ACs changed), then finish again. Do not create a new run directory.
-- If you cannot fix it (a tool is denied, the story has no usable content),
-  do not loop — stop and say why in your final message.
+- If you cannot produce a valid `us.json` for a reason outside your control (a
+  tool is denied, the story has no usable content), do not write a placeholder
+  and do not loop — end your final message with a line
+  `BLOCKED: <reason>`. The hook then marks the run FAILED without retrying.
 - If the hook says the retries are used up, stop immediately and reply with the
   `US.JSON VALIDATION FAILED ...` report it asks for — no more tool calls.
 - End with a single handoff line:

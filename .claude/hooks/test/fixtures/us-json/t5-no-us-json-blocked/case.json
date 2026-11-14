@@ -1,0 +1,13 @@
+{
+  "description": "T5 (with a declared blocker) — same empty tracker item 111, but the planner ends with a 'BLOCKED: <reason>' line as story-planner.md asks. The gate records FAILED immediately and lets the stop through: no retries burned. The outcome is always FAILED, so declaring BLOCKED can never produce a pass.",
+  "us_id": "111",
+  "last_message": "Tracker item 111 has nothing to plan from.\nBLOCKED: tracker item 111 has no description and no acceptance criteria",
+  "expect": {
+    "script": ["BLOCKED"],
+    "llm": ["BLOCKED"],
+    "subagent": ["BLOCKED"]
+  },
+  "assert": {
+    "*": { "retries": 0, "checked_by_includes": "pre-check" }
+  }
+}
