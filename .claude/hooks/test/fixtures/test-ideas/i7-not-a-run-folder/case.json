@@ -1,0 +1,12 @@
+{
+  "description": "A test-ideas.json outside .workflow-artifacts/<run_id>/ (here under a dot-folder) is not a pipeline artifact: the write trigger ignores it, the stop trigger finds no artifact.",
+  "location": "outside",
+  "expect": {
+    "write": [
+      "IGNORED"
+    ],
+    "stop": [
+      "NO_ARTIFACT"
+    ]
+  }
+}

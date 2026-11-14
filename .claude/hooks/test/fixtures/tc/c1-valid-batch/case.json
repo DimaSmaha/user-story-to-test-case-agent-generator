@@ -1,0 +1,14 @@
+{
+  "description": "Valid output of batch-generate-tc.sh for 3 scenarios (story 114, no reconciliation.json).",
+  "command": "batch",
+  "expect": [
+    "PASS"
+  ],
+  "assert": {
+    "indices": [
+      0,
+      1,
+      2
+    ]
+  }
+}

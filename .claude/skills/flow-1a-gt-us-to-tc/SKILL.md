@@ -83,10 +83,11 @@ Skill: gt-story-planner  args: --run-id <run_id> --us-text "<title + description
 On finish, the `SubagentStop` hook (`.claude/hooks/us-json-gate.mjs`) validates
 `us.json` and sends feedback to the planner (max 3 retries). Afterwards read
 `{run_dir}/us.validation.json`:
-- `status: "FAILED"` → **abort** and report its `notes`
+- `status: "FAILED"` → **abort** and report its `notes` (and `blocked`, when the planner declared a blocker)
+- `status: "RETRYING"` → **abort** — the last checked `us.json` was invalid and the planner never finished fixing it (e.g. the run was interrupted)
 - `PASSED` / `UNVERIFIED` (reviewer could not run) / file absent → continue
 
-- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}` and `us.validation.json.status` is not `FAILED`
+- Resume-skip: `us.json` and `scenarios.md` both exist in `{run_dir}` and `us.validation.json.status` is `PASSED` or `UNVERIFIED`
 - Success → emit compact block → continue to Phase 1.5
 - **Abort on failure** (no scenarios to work with)
 
@@ -202,7 +203,7 @@ After the skill returns, count `tc-*.json` files present in `{run_dir}`. If the 
 - Resume-skip: batch script skips indices where `tc-{index}.json` already exists
 - Individual scenario failure → logged per scenario, pipeline continues
 - All 3 invocations exhausted with missing TCs → log → continue to Phase 4 with whatever tc files exist
-- Validation: the skill's `tc-gate` hook reviews each successful script run with one LLM call and may return `tc validation FAILED (retry N/3)` feedback — follow it as the skill's "Validation feedback" section says. `tc.validation.json` `RETRYING` / `FAILED` / `UNVERIFIED` → log it and continue to Phase 3.5; never abort
+- Validation: the skill's `tc-gate` hook reviews each successful script run with one LLM call and may return `tc validation FAILED (retry N/3)` feedback — follow it as the skill's "Validation feedback" section says. `tc.validation.json` `RETRYING` / `FAILED` / `UNVERIFIED` → log it and continue to Phase 3.5; never abort. Keep its `status` as `tc_validation` in the Phase 3 compact block — Phase 5 must report it
 
 Checkpoint: `✓ Test cases generated: N / M scenarios`
 
@@ -268,8 +269,13 @@ Output a table:
 
 Run ID: gtc-20240601-143012
 Total: 3 scenarios | 1 modified | 1 created | K obsolete tagged | 2 linked to story {us_id} | 1 skipped
+Validation: us.json PASSED | test-ideas.json PASSED | test cases FAILED (2 notes — see tc.validation.json)
 Next: run flow-1b-gt-tc-to-spec --run-id gtc-20240601-143012 to generate Playwright specs
 ```
+
+`Validation:` = the `status` of `us.validation.json`, `test-ideas.validation.json` and `tc.validation.json`
+(`absent` when a file does not exist). Anything but `PASSED` gets its note count and file name: the test-case
+review never aborts the run, so this line is the only place its result reaches the user.
 
 ---
 
@@ -295,7 +301,7 @@ After each phase, emit a compact block and drop all full phase output from activ
 | gt-test-ideation (2) | `total_ideas`, `scenario_count` |
 | Bug reporting (2.5) | `bugs_filed`, `bugs_failed` |
 | TC Reconciliation (2.7) | `existing_tc_count`, `match_count`, `obsolete_count` |
-| gt-test-case-generator (3) | `tc_count`, `failed_count` |
+| gt-test-case-generator (3) | `tc_count`, `failed_count`, `tc_validation` |
 | Tag Obsolete TCs (3.5) | `obsolete_tagged_count`, `obsolete_failed_count` |
 | Link TCs to Story (4) | `linked_count`, `failed_count` |
 

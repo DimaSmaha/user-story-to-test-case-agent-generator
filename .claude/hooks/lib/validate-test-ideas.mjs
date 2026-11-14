@@ -6,12 +6,14 @@
 // CLI:      node .claude/hooks/lib/validate-test-ideas.mjs <path/to/test-ideas.json>
 //           → prints "PASS" (+ "note: …" lines) (exit 0) or one error per line (exit 1)
 //
-// Cross-checks read the siblings in the same run folder: scenarios.md (coverage + order) and
-// us.json (ac_trace "ACn:" labels). A missing sibling skips that check and adds a warning.
+// Cross-checks read the siblings in the same run folder — the ground truth: scenarios.md (coverage + order) and
+// us.json (ac_trace "ACn: <text>" = us.json.ac[n-1]). A missing sibling is an error (one note: wrong run folder;
+// never fabricate it). Feedback rule: one note per problem, one fix per note.
+// Test cases: .claude/hooks/test/run-artifact-gate-cases.mjs (fixtures/test-ideas/).
 
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, resolve, relative, isAbsolute } from "node:path";
 
 const STRING_LIST_FIELDS = ["conditions", "ideas", "verifications", "navigations"];
 
@@ -20,12 +22,13 @@ const norm = (s) => s.replace(/\s+/g, " ").trim();
 
 /**
  * @param {unknown} units parsed test-ideas.json
- * @param {{ scenarios?: string[] | null, acCount?: number | null }} [context]
+ * @param {{ scenarios?: string[] | null, acs?: string[] | null }} [context]
  *        scenarios = "## [P…]" heading texts from scenarios.md (null → coverage not checked)
- *        acCount   = us.json.ac.length (null → ACn labels not checked)
+ *        acs       = us.json.ac (null → "ACn: <text>" labels not checked)
  * @returns {string[]} human-readable errors; empty array means valid
  */
-export function validateTestIdeas(units, { scenarios = null, acCount = null } = {}) {
+export function validateTestIdeas(units, { scenarios = null, acs = null } = {}) {
+  const acCount = Array.isArray(acs) ? acs.length : null;
   if (!Array.isArray(units)) {
     return [`test-ideas.json: ${describe(units)} → must be a JSON array of ideation units [ { index, scenario, ... }, ... ]`];
   }
@@ -69,7 +72,7 @@ export function validateTestIdeas(units, { scenarios = null, acCount = null } = 
 
     if (Array.isArray(u.ideas) && Array.isArray(u.verifications) && u.ideas.length !== u.verifications.length) {
       errors.push(
-        `${unitLabel(u, i)}: ideas has ${u.ideas.length} items but verifications has ${u.verifications.length} → they must be the same length; verifications[k] checks ideas[k]`,
+        `${unitLabel(u, i)}: ideas has ${u.ideas.length} items but verifications has ${u.verifications.length} → make them pair 1:1 (verifications[k] checks ideas[k]); every idea needs exactly one real verification — no filler or duplicate items to even the count`,
       );
     }
 
@@ -84,13 +87,24 @@ export function validateTestIdeas(units, { scenarios = null, acCount = null } = 
           errors.push(`${at}.ac_trace[${j}]: ${describe(s)} → must be a non-empty string`);
           return;
         }
-        const m = /^AC(\d+)\s*:/.exec(s.trim());
+        const m = /^AC(\d+)\s*:\s*([\s\S]*)$/.exec(s.trim());
         if (!m || acCount === null) return;
         const n = Number(m[1]);
         if (n < 1 || n > acCount) {
           const have = acCount === 0 ? "us.json.ac is empty" : `us.json.ac has ${acCount} criteria (AC1–AC${acCount})`;
           errors.push(`${at}.ac_trace[${j}]: ${JSON.stringify(trunc(s))} → AC${n} does not exist; ${have}`);
+          return;
         }
+        // The text after "ACn:" must be us.json.ac[n-1] — real runs always quote it verbatim, so a different text
+        // means the label points at the wrong criterion (or the criterion was reworded).
+        const text = norm(m[2]);
+        if (text === norm(String(acs[n - 1] ?? ""))) return;
+        const other = acs.findIndex((ac) => norm(String(ac)) === text);
+        errors.push(
+          other >= 0
+            ? `${at}.ac_trace[${j}]: ${JSON.stringify(trunc(s))} → this text is AC${other + 1} in us.json, not AC${n}; write it as "AC${other + 1}: <same text>"`
+            : `${at}.ac_trace[${j}]: ${JSON.stringify(trunc(s))} → the text after "AC${n}:" must be us.json.ac[${n - 1}] verbatim: ${JSON.stringify(trunc(String(acs[n - 1])))}`,
+        );
       });
     }
 
@@ -109,30 +123,47 @@ export function validateTestIdeas(units, { scenarios = null, acCount = null } = 
   return errors;
 }
 
-/** Every scenarios.md heading exactly once, in order; no unit outside scenarios.md. */
+/**
+ * Every scenarios.md heading exactly once, in order; no unit outside scenarios.md.
+ * One problem → one note with one fix: a unit whose scenario is not a heading is first paired with a heading that has
+ * no unit (same position, else the most similar one) — that is a mistyped/paraphrased heading, fixed by copying the
+ * heading. Only unpaired units are "remove", and only unpaired headings are "add a unit".
+ */
 function checkCoverage(units, headings) {
   const errors = [];
   const expected = [...new Set(headings.map(norm))];
   const known = new Set(expected);
   const unitsOf = new Map(); // heading → unit indices that use it
+  const unknown = []; // { i, s } units whose scenario is not a heading
 
   units.forEach((u, i) => {
     if (!u || typeof u !== "object" || !isNonEmptyString(u.scenario)) return;
     const s = norm(u.scenario);
     if (!known.has(s)) {
-      errors.push(
-        `unit[${i}].scenario: ${JSON.stringify(trunc(s))} is not a "## [P…]" heading in scenarios.md → copy the heading text exactly (without "## "), or remove the unit`,
-      );
+      unknown.push({ i, s });
       return;
     }
     if (!unitsOf.has(s)) unitsOf.set(s, []);
     unitsOf.get(s).push(i);
   });
 
+  const missing = expected.map((s, k) => ({ k, s })).filter(({ s }) => !unitsOf.has(s));
+  const paired = pairWithMissing(unknown, missing); // unit index → { k, s }
+  const pairedHeadings = new Set([...paired.values()].map((m) => m.k));
+
+  for (const { i, s } of unknown) {
+    const m = paired.get(i);
+    errors.push(
+      m
+        ? `unit[${i}].scenario: ${JSON.stringify(trunc(s))} is not a "## [P…]" heading in scenarios.md; heading #${m.k + 1} has no unit → replace it with exactly ${JSON.stringify(m.s)}`
+        : `unit[${i}].scenario: ${JSON.stringify(trunc(s))} is not a "## [P…]" heading in scenarios.md and matches none of its uncovered headings → remove this unit (scenarios.md does not plan this scenario)`,
+    );
+  }
+
   expected.forEach((s, k) => {
     const at = unitsOf.get(s);
     if (!at) {
-      errors.push(`scenarios.md heading #${k + 1} ${JSON.stringify(trunc(s))} has no unit → add a unit for it (in scenarios.md order)`);
+      if (!pairedHeadings.has(k)) errors.push(`scenarios.md heading #${k + 1} ${JSON.stringify(trunc(s))} has no unit → add a unit for it (in scenarios.md order)`);
     } else if (at.length > 1) {
       errors.push(
         `scenario ${JSON.stringify(trunc(s))} appears in ${at.length} units (${at.map((i) => `unit[${i}]`).join(", ")}) → keep exactly one`,
@@ -153,6 +184,39 @@ function checkCoverage(units, headings) {
   return errors;
 }
 
+/** Pair unknown units with uncovered headings: same position first, then best word overlap ≥ 0.3. */
+function pairWithMissing(unknown, missing) {
+  const pairs = new Map();
+  const used = new Set();
+  for (const u of unknown) {
+    let best = missing.find((m) => m.k === u.i);
+    if (best && used.has(best.k)) best = undefined;
+    if (!best) {
+      let score = 0.3;
+      for (const m of missing) {
+        if (used.has(m.k)) continue;
+        const sim = similarity(u.s, m.s);
+        if (sim >= score) [score, best] = [sim, m];
+      }
+    }
+    if (best) {
+      used.add(best.k);
+      pairs.set(u.i, best);
+    }
+  }
+  return pairs;
+}
+
+/** Jaccard overlap of lower-case words. */
+function similarity(a, b) {
+  const words = (s) => new Set(s.toLowerCase().match(/[a-z0-9]+/g) ?? []);
+  const A = words(a);
+  const B = words(b);
+  const inter = [...A].filter((w) => B.has(w)).length;
+  const union = new Set([...A, ...B]).size;
+  return union ? inter / union : 0;
+}
+
 /** "## [P…] <text>" headings (level 2 only; [SKIP] and charter headings are ignored). */
 export function parseScenarioHeadings(markdown) {
   return markdown
@@ -163,6 +227,7 @@ export function parseScenarioHeadings(markdown) {
 
 /** @returns {{ errors: string[], warnings: string[], data: unknown }} */
 export function validateArtifact(absPath) {
+  const errors = [];
   const warnings = [];
 
   const raw = readOrNull(absPath);
@@ -181,12 +246,21 @@ export function validateArtifact(absPath) {
   }
 
   const dir = dirname(absPath);
+  const md = readOrNull(join(dir, "scenarios.md"));
+  const usRaw = readOrNull(join(dir, "us.json"));
+
+  // Ground truth missing → one error, not a silent pass with skipped checks. gt-test-ideation cannot fix this by
+  // editing test-ideas.json, and must never fabricate the planner's files to get past the check.
+  const absent = [md === null && "scenarios.md", usRaw === null && "us.json"].filter(Boolean);
+  if (absent.length) {
+    const what = absent.join(" and ");
+    errors.push(
+      `${what}: not found next to test-ideas.json in ${shortPath(dir)} — gt-story-planner writes ${absent.length > 1 ? "them" : "it"}, and coverage/AC labels are checked against ${absent.length > 1 ? "them" : "it"} → write test-ideas.json into the run folder that holds this story's scenarios.md and us.json; never create or edit those files yourself`,
+    );
+  }
 
   let scenarios = null;
-  const md = readOrNull(join(dir, "scenarios.md"));
-  if (md === null) {
-    warnings.push("scenarios.md not found next to test-ideas.json → scenario coverage/order not checked");
-  } else {
+  if (md !== null) {
     scenarios = parseScenarioHeadings(md);
     if (scenarios.length === 0) {
       warnings.push('scenarios.md has no "## [P…]" headings → scenario coverage/order not checked');
@@ -194,22 +268,26 @@ export function validateArtifact(absPath) {
     }
   }
 
-  let acCount = null;
-  const usRaw = readOrNull(join(dir, "us.json"));
-  if (usRaw === null) {
-    warnings.push("us.json not found next to test-ideas.json → ac_trace AC labels not checked");
-  } else {
+  let acs = null;
+  if (usRaw !== null) {
     let us = null;
     try {
       us = JSON.parse(usRaw.replace(/^﻿/, ""));
     } catch {
       /* handled below */
     }
-    if (Array.isArray(us?.ac)) acCount = us.ac.length;
+    if (Array.isArray(us?.ac)) acs = us.ac;
     else warnings.push("us.json is not valid JSON with an ac array → ac_trace AC labels not checked");
   }
 
-  return { errors: validateTestIdeas(data, { scenarios, acCount }), warnings, data };
+  errors.push(...validateTestIdeas(data, { scenarios, acs }));
+  return { errors, warnings, data };
+}
+
+/** Path relative to the working directory when inside it (as hooks run from the project root), else absolute. */
+function shortPath(p) {
+  const rel = relative(process.cwd(), p);
+  return (rel && !rel.startsWith("..") && !isAbsolute(rel) ? rel : p).split("\\").join("/");
 }
 
 function unitLabel(u, i) {

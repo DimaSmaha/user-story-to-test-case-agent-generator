@@ -1,0 +1,11 @@
+{
+  "description": "The reviewer cannot run (unknown model) → UNVERIFIED, not counted as a retry.",
+  "command": "batch",
+  "model": "__missing_model__",
+  "expect": [
+    "UNVERIFIED"
+  ],
+  "assert": {
+    "retries": 0
+  }
+}

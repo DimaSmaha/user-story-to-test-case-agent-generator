@@ -1,0 +1,13 @@
+{
+  "description": "T3 — fidelity defect: the 7th AC ('Share via email' button) is not in the description, i.e. invented (reviewer rule 11). Script mode cannot see it (expected blind spot); llm/subagent must BLOCK.",
+  "expect": {
+    "script": ["PASS"],
+    "llm": ["BLOCK"],
+    "subagent": ["BLOCK"]
+  },
+  "blind_spot": ["script"],
+  "assert": {
+    "llm": { "notes_match": "share|email" },
+    "subagent": { "notes_match": "share|email" }
+  }
+}

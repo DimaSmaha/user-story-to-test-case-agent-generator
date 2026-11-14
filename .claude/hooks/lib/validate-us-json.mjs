@@ -4,9 +4,9 @@
 // CLI:      node .claude/hooks/lib/validate-us-json.mjs <path/to/us.json>
 //           → prints "PASS" (exit 0) or one error per line (exit 1)
 
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { resolve } from "node:path";
+import { resolve, join, dirname, relative } from "node:path";
 
 const isNonEmptyString = (v) => typeof v === "string" && v.trim() !== "";
 
@@ -56,7 +56,12 @@ export function validateUsJson(us) {
   return errors;
 }
 
-/** @returns {{ errors: string[], data: unknown }} */
+/**
+ * File-level check: the us.json contract, plus the run-folder rule that a tracker story must have its
+ * ground truth next to it — tracker-source.json (the verbatim get.sh output) is what the fidelity
+ * review compares against, so without it the only valid fix is to restore it.
+ * @returns {{ errors: string[], data: unknown }}
+ */
 export function validateUsJsonFile(path) {
   let raw;
   try {
@@ -70,7 +75,22 @@ export function validateUsJsonFile(path) {
   } catch (e) {
     return { errors: [`us.json: invalid JSON (${e.message}) → rewrite the file as valid JSON`], data: null };
   }
-  return { errors: validateUsJson(data), data };
+  const errors = validateUsJson(data);
+  const id = data !== null && typeof data === "object" ? data.id : undefined;
+  const isTrackerStory = (typeof id === "number" || isNonEmptyString(id)) && id !== "manual";
+  const sourcePath = join(dirname(path), "tracker-source.json");
+  if (isTrackerStory && !existsSync(sourcePath)) {
+    errors.push(
+      `tracker-source.json: missing next to us.json for tracker story ${JSON.stringify(id)} → re-run get.sh --id ${id} and save its verbatim output to ${shortPath(sourcePath)} (do not switch the story to "manual")`,
+    );
+  }
+  return { errors, data };
+}
+
+/** Path relative to the working directory (the project root for the hook and the CLI), POSIX slashes. */
+function shortPath(p) {
+  const rel = relative(process.cwd(), p);
+  return (rel && !rel.startsWith("..") ? rel : p).split("\\").join("/");
 }
 
 function describe(v) {

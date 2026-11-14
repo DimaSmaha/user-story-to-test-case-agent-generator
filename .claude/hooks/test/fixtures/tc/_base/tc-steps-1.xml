@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<steps>
+  <step index="1">
+    <action><![CDATA[Observe that each product on the inventory page has a clickable image]]></action>
+    <expected><![CDATA[Product images on the inventory page are rendered as clickable links with pointer cursor]]></expected>
+  </step>
+  <step index="2">
+    <action><![CDATA[Click the product image for 'Sauce Labs Bike Light']]></action>
+    <expected><![CDATA[Click on the 'Sauce Labs Bike Light' image triggers navigation]]></expected>
+  </step>
+  <step index="3">
+    <action><![CDATA[Observe navigation occurs to the product details page]]></action>
+    <expected><![CDATA[URL changes to /inventory-item.html]]></expected>
+  </step>
+  <step index="4">
+    <action><![CDATA[Observe the product details page content matches the clicked product]]></action>
+    <expected><![CDATA[Product details page displays 'Sauce Labs Bike Light' name, description, and '$9.99' price]]></expected>
+  </step>
+</steps>

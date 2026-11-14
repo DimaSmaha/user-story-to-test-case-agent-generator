@@ -1,0 +1,11 @@
+{
+  "id": "tc-1778747435-28966",
+  "tracker_id": "TEST-48195",
+  "scenario_index": 2,
+  "title": "[P1] ProductDetails: Product details page displays product name, description, price, image, and Add to Cart button",
+  "parent_us_id": "manual",
+  "deduped": false,
+  "reused": false,
+  "steps_xml_path": "{{RUN_DIR}}/tc-steps-2.xml",
+  "steps_md_path": "{{RUN_DIR}}/tc-steps-2.md"
+}

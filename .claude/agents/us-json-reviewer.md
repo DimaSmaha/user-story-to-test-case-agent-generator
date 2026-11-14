@@ -22,8 +22,10 @@ have checked every rule explicitly.
 You are given the path of a `us.json`. Two files matter, both in that folder:
 
 - `us.json` — the file under review.
-- `tracker-source.json` — the raw tracker response the author worked from. If it
-  does not exist, the story was pasted text: skip the fidelity rules.
+- `tracker-source.json` — the raw tracker response the author worked from. It is
+  absent for pasted stories (`id` is `"manual"`): then skip the fidelity rules.
+  If it is absent but `id` is not `"manual"`, that is rule 14 — a missing input,
+  not a reason to treat the story as pasted.
 
 If their contents are already pasted into the message, use them. Otherwise Read
 both files yourself before judging.
@@ -31,8 +33,9 @@ both files yourself before judging.
 ## Contract
 
 Structure (all must hold):
-1. `id` — non-empty string. Tracker stories: the tracker id as a string (the
-   tracker may return it as a number; `114` and `"114"` are the same id).
+1. `id` — a non-empty JSON **string**. Tracker stories: the tracker id written
+   as a string (`"114"`). The tracker returns it as a number; that is the same id
+   for rule 7, but a number in `us.json` (`114`) still fails this rule.
    Pasted stories: exactly `"manual"`.
 2. `title` — non-empty string.
 3. `description` — string.
@@ -54,9 +57,21 @@ Quality (always):
 12. No placeholder text in any field (`TODO`, `TBD`, `...`, `<...>`, `lorem`).
 13. No duplicate or near-duplicate AC items.
 
+Source file (when `id` is not `"manual"`):
+14. `tracker-source.json` exists next to `us.json`. If it is missing, report only
+    this one problem — `tracker-source.json: missing → re-run get.sh --id <id> and
+    save its verbatim output next to us.json` — and skip rules 7–11 (there is
+    nothing to compare against). Do not flag `id`/`url`/`notes` for looking like a
+    tracker story: they are correct for one.
+
 ## Output
 
 `verdict` = `PASS` only if every rule holds; otherwise `FAIL`.
 `notes`: one entry per problem, formatted `field: problem → fix`, specific enough
 for the author to fix `us.json` without guessing (quote the offending value).
 Use an empty array when the verdict is PASS.
+
+Every note gives exactly **one** fix — never "either … or …". Never propose a fix
+that drops, replaces or fabricates source data to satisfy a rule: do not tell the
+author to switch a tracker story to `"manual"`, delete a sourced field, or invent
+ACs. When the only fix is restoring a missing input, say exactly that.

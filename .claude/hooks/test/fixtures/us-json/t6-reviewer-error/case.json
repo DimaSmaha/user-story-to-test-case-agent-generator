@@ -1,0 +1,14 @@
+{
+  "description": "T6 — the reviewer itself cannot run (CLAUDE_BIN points to a binary that does not exist). The gate must fail open: status UNVERIFIED, stop allowed, not counted as a retry. Only subagent mode spawns a binary, so script/llm are skipped.",
+  "env": { "CLAUDE_BIN": "__missing_claude_binary__" },
+  "expect": {
+    "subagent": ["UNVERIFIED"]
+  },
+  "skip_reason": {
+    "script": "no reviewer process to break",
+    "llm": "the Agent SDK call cannot be broken from the environment without side effects"
+  },
+  "assert": {
+    "subagent": { "retries": 0 }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "description": "T4 — quality defect: ac[6] repeats ac[1] word for word (reviewer rule 13). Script mode passes it (expected blind spot); llm/subagent must BLOCK.",
+  "expect": {
+    "script": ["PASS"],
+    "llm": ["BLOCK"],
+    "subagent": ["BLOCK"]
+  },
+  "blind_spot": ["script"],
+  "assert": {
+    "llm": { "notes_match": "duplicat|repeat" },
+    "subagent": { "notes_match": "duplicat|repeat" }
+  }
+}

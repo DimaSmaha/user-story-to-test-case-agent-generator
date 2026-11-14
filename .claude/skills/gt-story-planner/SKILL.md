@@ -61,6 +61,12 @@ If the hook sends feedback (`us.json validation FAILED (retry N/3)`), fix
 changed, then finish again. After 3 failed retries the run is marked `FAILED`
 in `.workflow-artifacts/{run_id}/us.validation.json`.
 
+If a valid `us.json` cannot be produced for a reason outside your control (the
+tracker item has no title/description/AC to plan from, a required tool is
+denied), do not write a placeholder or invent content. End your final message
+with a line `BLOCKED: <reason>` — the hook then records `FAILED` immediately
+instead of spending its retries on a problem no fix can solve.
+
 ## Workflow
 
 ### 1. Fetch or synthesize us.json

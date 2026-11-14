@@ -1,0 +1,13 @@
+{
+  "description": "T3 — fidelity defect: description is a one-sentence summary, not the tracker description (reviewer rule 9). Structurally valid, so script mode cannot see it (expected blind spot). llm/subagent must BLOCK; after the fix (us.fixed.json = t1) they must PASS.",
+  "expect": {
+    "script": ["PASS"],
+    "llm": ["BLOCK", "PASS"],
+    "subagent": ["BLOCK", "PASS"]
+  },
+  "blind_spot": ["script"],
+  "assert": {
+    "llm": { "retries": 1, "notes_match": "description" },
+    "subagent": { "retries": 1, "notes_match": "description" }
+  }
+}

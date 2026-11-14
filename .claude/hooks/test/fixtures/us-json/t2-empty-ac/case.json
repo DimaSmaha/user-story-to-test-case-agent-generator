@@ -1,0 +1,11 @@
+{
+  "description": "T2 — structural defect that can be fixed: the tracker acl is empty and the author copied it as \"ac\": [] instead of deriving ACs from the description. After the first BLOCK the runner writes us.fixed.json (= t1).",
+  "expect": {
+    "script": ["BLOCK", "PASS"],
+    "llm": ["BLOCK", "PASS"],
+    "subagent": ["BLOCK", "PASS"]
+  },
+  "assert": {
+    "*": { "retries": 1, "notes_match": "\\bac\\b" }
+  }
+}

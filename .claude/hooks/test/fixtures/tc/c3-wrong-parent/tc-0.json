@@ -1,0 +1,11 @@
+{
+  "id": "tc-1778747424-11362",
+  "tracker_id": "TEST-87766",
+  "scenario_index": 0,
+  "title": "[P1] ProductDetails: Clicking product name on inventory navigates to product details page",
+  "parent_us_id": "manual",
+  "deduped": false,
+  "reused": false,
+  "steps_xml_path": "{{RUN_DIR}}/tc-steps-0.xml",
+  "steps_md_path": "{{RUN_DIR}}/tc-steps-0.md"
+}

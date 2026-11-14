@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<steps>
+  <step index="1">
+    <action><![CDATA[Observe the inventory page listing all 6 products with clickable name links]]></action>
+    <expected><![CDATA[Inventory page is loaded and displays multiple product name links]]></expected>
+  </step>
+  <step index="2">
+    <action><![CDATA[Locate the product name link 'Sauce Labs Backpack']]></action>
+    <expected><![CDATA['Sauce Labs Backpack' name link is visible and cursor is pointer]]></expected>
+  </step>
+  <step index="3">
+    <action><![CDATA[Click the product name link 'Sauce Labs Backpack']]></action>
+    <expected><![CDATA[Click triggers navigation away from /inventory.html]]></expected>
+  </step>
+  <step index="4">
+    <action><![CDATA[Observe that navigation occurs to the product details page]]></action>
+    <expected><![CDATA[URL changes to /inventory-item.html and the product details page for 'Sauce Labs Backpack' is displayed]]></expected>
+  </step>
+</steps>

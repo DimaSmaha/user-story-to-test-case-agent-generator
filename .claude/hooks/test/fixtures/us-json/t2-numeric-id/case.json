@@ -1,0 +1,11 @@
+{
+  "description": "T2 — structural defect that can be fixed: id is the number 114 (copied from the tracker as-is) instead of the string \"114\". After the first BLOCK the runner writes us.fixed.json (= t1), so the loop closes: BLOCK → fix → PASS with retries 1.",
+  "expect": {
+    "script": ["BLOCK", "PASS"],
+    "llm": ["BLOCK", "PASS"],
+    "subagent": ["BLOCK", "PASS"]
+  },
+  "assert": {
+    "*": { "retries": 1, "notes_match": "\\bid\\b" }
+  }
+}

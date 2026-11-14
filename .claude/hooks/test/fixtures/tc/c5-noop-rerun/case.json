@@ -1,0 +1,11 @@
+{
+  "description": "flow-1a re-invokes the batch script on a complete, valid run folder (resume no-op). Identical input → the second review reuses the first verdict.",
+  "command": "batch",
+  "expect": [
+    "PASS",
+    "PASS"
+  ],
+  "assert": {
+    "model_calls": 1
+  }
+}

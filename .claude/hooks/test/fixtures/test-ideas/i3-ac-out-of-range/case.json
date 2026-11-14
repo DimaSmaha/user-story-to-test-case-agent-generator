@@ -1,0 +1,16 @@
+{
+  "description": "unit[0].ac_trace cites AC7; us.json has 6 acceptance criteria.",
+  "expect": {
+    "write": [
+      "BLOCK"
+    ],
+    "stop": [
+      "BLOCK"
+    ]
+  },
+  "assert": {
+    "*": {
+      "notes_match": "AC7 does not exist"
+    }
+  }
+}

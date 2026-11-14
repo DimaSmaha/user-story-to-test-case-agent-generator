@@ -1,0 +1,13 @@
+{
+  "description": "Script ran without --us-id, so every parent_us_id is \"manual\" while us.json.id is \"114\" (criterion 4). Fix = regenerate with --us-id.",
+  "command": "batch-no-us-id",
+  "fix": "regenerate",
+  "fix_command": "batch",
+  "expect": [
+    "BLOCK",
+    "PASS"
+  ],
+  "assert": {
+    "notes_match": "parent_us_id"
+  }
+}

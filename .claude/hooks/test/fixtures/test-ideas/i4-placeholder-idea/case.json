@@ -1,0 +1,15 @@
+{
+  "description": "unit[2] idea 2 and its verification are \"TBD\". Structurally valid — the deterministic validator cannot judge content (documented blind spot).",
+  "expect": {
+    "write": [
+      "PASS"
+    ],
+    "stop": [
+      "PASS"
+    ]
+  },
+  "blind_spot": [
+    "write",
+    "stop"
+  ]
+}

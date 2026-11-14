@@ -16,21 +16,30 @@
 //           Fail → reason on stderr + exit 2 (a blocking exit keeps a `once` hook registered; exit 0 removes it).
 //           SKIPPED when the run folder already has a file from "skip_stop_if_present" — i.e. the turn
 //           that ended was a whole flow-1a run, which is long past this stage.
+//           Blocker: a "BLOCKED: <reason>" line in the agent's final message (it cannot fix the file) → FAILED
+//           at once, stop allowed — no retries burned on a condition that will never resolve.
+//           Any exit 0 (PASS, SKIPPED, NO_ARTIFACT, BLOCKED, INACTIVE) removes the `once` hook for the session.
 //
 // Validator module: `export function validateArtifact(absPath) → { errors: string[], warnings?: string[] }`.
+// Warnings (skipped checks) are shown as a systemMessage on PASS.
 //
 // Bounded loop per (session, run folder, artifact): up to max_retries feedback blocks, then one last block
 // asking for a "<STEM> VALIDATION FAILED after N retries — <path>" report, then no more feedback (later runs
-// re-validate silently, so the status can still flip to PASSED).
+// re-validate silently, so the status can still flip to PASSED). A PASS resets the count: a later failure is a
+// new problem and gets its own max_retries.
 // Status: {run_dir}/<stem>.validation.json     State + log: .workflow-artifacts/.hook-state/
+// Test cases: .claude/hooks/test/run-artifact-gate-cases.mjs (npm run test:artifact-gate)
 
 import { readFileSync, writeFileSync, appendFileSync, mkdirSync, readdirSync } from "node:fs";
 import { join, dirname, relative, isAbsolute, resolve } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { declaredBlocker } from "./lib/declared-blocker.mjs";
 
 const HOOKS_DIR = dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = join(HOOKS_DIR, "artifact-gate.json");
+// ARTIFACT_GATE_CONFIG: test seam — the offline runner (.claude/hooks/test/run-artifact-gate-cases.mjs) points it
+// at a copy with the other "trigger", so both triggers can be tested without editing the real config.
+const CONFIG_PATH = process.env.ARTIFACT_GATE_CONFIG ? resolve(process.env.ARTIFACT_GATE_CONFIG) : join(HOOKS_DIR, "artifact-gate.json");
 const TRIGGERS = ["write", "stop"];
 const WRITE_TOOLS = new Set(["Write", "Edit", "MultiEdit"]);
 const DEFAULT_MAX_RETRIES = 3;
@@ -78,11 +87,17 @@ async function main() {
   }
 
   // ── 2. Locate the file ─────────────────────────────────────────────────────
+  const transcript = trigger === "stop" ? readTranscript(input.transcript_path) : [];
   if (trigger === "stop") {
-    filePath = locateFromTranscript(readTranscript(input.transcript_path), artifact, entry.skill);
+    filePath = locateFromTranscript(transcript, artifact, entry.skill);
     if (!filePath) {
       log({ result: "NO_ARTIFACT" });
-      emit({ systemMessage: `artifact-gate: no .workflow-artifacts/<run_id>/${artifact} was written this turn — nothing validated` });
+      // Exit 0 = a "successful run", so Claude Code now removes this once-only skill hook (docs: `once`).
+      emit({
+        systemMessage:
+          `artifact-gate: no .workflow-artifacts/<run_id>/${artifact} was written since ${entry.skill ?? "the skill"} started — nothing validated. ` +
+          `This once-only Stop check is now used up: re-invoke ${entry.skill ?? "the skill"} (or set trigger "write") to check a later version.`,
+      });
       return;
     }
   }
@@ -111,7 +126,7 @@ async function main() {
   const saveState = () => writeJson(statePath, { ...state, path: rel, updated_at: new Date().toISOString() });
 
   const validationPath = join(runDir.dir, `${stem}.validation.json`);
-  const record = (status) =>
+  const record = (status, extra = {}) =>
     writeJson(validationPath, {
       status,
       retries: state.attempts,
@@ -121,13 +136,22 @@ async function main() {
       path: rel,
       notes: errors,
       ...(warnings.length ? { warnings } : {}),
+      ...extra,
       checked_at: new Date().toISOString(),
     });
 
   // ── 6. Decide ──────────────────────────────────────────────────────────────
   if (errors.length === 0) {
-    record("PASSED");
+    record("PASSED"); // retries = feedback rounds this fix took
     log({ result: "PASSED", retries: state.attempts, ...(warnings.length ? { warnings } : {}) });
+    // A pass ends the failure episode: a later failure (another edit, same session) starts at retry 1 again —
+    // like Claude Code's own stop-hook cap, which counts consecutive continuations only.
+    if (state.attempts || state.reported) {
+      state = { attempts: 0, reported: false, session_id: sessionId };
+      saveState();
+    }
+    // Skipped checks must be visible, not only in the status file.
+    if (warnings.length) emit({ systemMessage: `${artifact} PASSED, but some checks were skipped: ${warnings.join("; ")}` });
     return;
   }
 
@@ -135,6 +159,18 @@ async function main() {
   if (state.reported) {
     record("FAILED");
     log({ result: "FAILED_SILENT", retries: state.attempts, errors });
+    return;
+  }
+
+  // Stop trigger: the agent declared it cannot fix this ("BLOCKED: <reason>") → FAILED now, allow the stop.
+  // (The write trigger never forces a fix, so it has nothing to stop early.)
+  const blocker = trigger === "stop" ? declaredBlocker(input, transcript) : null;
+  if (blocker) {
+    state.reported = true;
+    saveState();
+    record("FAILED", { blocked: blocker });
+    log({ result: "BLOCKED", retries: state.attempts, blocked: blocker, errors });
+    emit({ systemMessage: `${artifact}: the agent declared a blocker — marked FAILED without retrying: ${blocker}` });
     return;
   }
 
@@ -152,7 +188,9 @@ async function main() {
         ...listed,
         ``,
         `Fix ${artifact} in place (same run folder, same path) so every point above is resolved${trigger === "stop" ? ", then finish again" : ""}.`,
-        `If something outside your control blocks the fix (e.g. a denied tool, or the inputs it is built from are wrong), stop and say why instead.`,
+        trigger === "stop"
+          ? `If something outside your control blocks the fix (e.g. a denied tool, or the inputs it is built from are wrong), stop trying: do not write a placeholder — end your final message with a line starting "BLOCKED: <reason>".`
+          : `If something outside your control blocks the fix (e.g. a denied tool, or the inputs it is built from are wrong), stop and say why instead.`,
       ].join("\n"),
     );
     return;

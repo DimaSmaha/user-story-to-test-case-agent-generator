@@ -1,0 +1,12 @@
+{
+  "description": "Valid single-index run whose run folder is given through a shell variable (run_id=…; bash … --run-dir \".workflow-artifacts/${run_id}\"). Scope must be [1] only.",
+  "command": "run_id={{RUN_ID}}; bash .claude/skills/gt-test-case-generator/scripts/generate-tc.sh --ideas-file \".workflow-artifacts/${run_id}/test-ideas.json\" --index 1 --run-dir \".workflow-artifacts/${run_id}\" --us-id 114",
+  "expect": [
+    "PASS"
+  ],
+  "assert": {
+    "indices": [
+      1
+    ]
+  }
+}

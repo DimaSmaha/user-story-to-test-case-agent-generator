@@ -1,0 +1,16 @@
+{
+  "description": "Valid test-ideas.json for story 114 (3 units, scenarios.md has 3 [P…] headings + 1 [SKIP] + a charter).",
+  "expect": {
+    "write": [
+      "PASS"
+    ],
+    "stop": [
+      "PASS"
+    ]
+  },
+  "assert": {
+    "*": {
+      "retries": 0
+    }
+  }
+}

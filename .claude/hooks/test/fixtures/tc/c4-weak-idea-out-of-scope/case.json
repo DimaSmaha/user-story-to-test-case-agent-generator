@@ -1,0 +1,7 @@
+{
+  "description": "Scope probe: test-ideas unit 2 has a \"TBD\" step, copied verbatim into tc-steps-2. Test design is gt-test-ideation's job, not this reviewer's — must pass.",
+  "command": "batch",
+  "expect": [
+    "PASS"
+  ]
+}

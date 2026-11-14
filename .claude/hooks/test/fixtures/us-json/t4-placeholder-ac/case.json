@@ -1,0 +1,13 @@
+{
+  "description": "T4 — quality defect: ac[2] is the placeholder \"TBD\" (reviewer rule 12). It is a non-empty string, so script mode passes it (expected blind spot); llm/subagent must BLOCK.",
+  "expect": {
+    "script": ["PASS"],
+    "llm": ["BLOCK"],
+    "subagent": ["BLOCK"]
+  },
+  "blind_spot": ["script"],
+  "assert": {
+    "llm": { "notes_match": "TBD|placeholder" },
+    "subagent": { "notes_match": "TBD|placeholder" }
+  }
+}

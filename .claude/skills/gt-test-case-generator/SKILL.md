@@ -139,6 +139,10 @@ When the feedback says all retries are used up: stop regenerating and reply with
 with `TC VALIDATION FAILED after 3 retries — <run_dir>` followed by the unresolved problems. Inside
 `flow-1a` this is not an abort — continue with Phase 3.5.
 
+The script is deterministic: re-running it without deleting the flagged files cannot change them, so the
+hook does not ask the model again for identical input — it reuses the last verdict (`cached: true` in
+`tc.validation.json`, still counted as a retry). A PASS resets the retry count.
+
 The hook only fires when the script exits 0. A batch run with `[FAIL]` scenarios exits 1 and is not
 reviewed — re-run it (resume-safe), or let flow-1a's re-invoke loop do so.
 

@@ -1,0 +1,11 @@
+{
+  "description": "T1 — correct us.json for tracker story 114 (acl empty, ACs derived from the description). Every validator must pass it.",
+  "expect": {
+    "script": ["PASS"],
+    "llm": ["PASS"],
+    "subagent": ["PASS"]
+  },
+  "assert": {
+    "*": { "retries": 0 }
+  }
+}

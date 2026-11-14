@@ -1,0 +1,25 @@
+{
+  "us_id": "114",
+  "existing_tc_count": 1,
+  "scenario_matches": [
+    {
+      "scenario_index": 0,
+      "new_title": "[P1] ProductDetails: Clicking product name on inventory navigates to product details page",
+      "matched_tracker_id": null,
+      "action": "create"
+    },
+    {
+      "scenario_index": 1,
+      "new_title": "[P1] ProductDetails: Clicking product image on inventory navigates to product details page",
+      "matched_tracker_id": "TEST-1001",
+      "action": "update"
+    },
+    {
+      "scenario_index": 2,
+      "new_title": "[P1] ProductDetails: Product details page displays product name, description, price, image, and Add to Cart button",
+      "matched_tracker_id": null,
+      "action": "create"
+    }
+  ],
+  "obsolete": []
+}

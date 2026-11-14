@@ -1,0 +1,11 @@
+{
+  "description": "Probe: straight quotes replaced by curly quotes in tc-steps-0.md step 2 — same meaning, not verbatim.",
+  "command": "batch",
+  "probe": true,
+  "expect": [
+    "BLOCK"
+  ],
+  "assert": {
+    "notes_match": "tc-steps-0"
+  }
+}

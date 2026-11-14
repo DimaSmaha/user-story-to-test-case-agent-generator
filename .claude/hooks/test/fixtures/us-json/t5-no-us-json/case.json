@@ -1,0 +1,17 @@
+{
+  "description": "T5 — input that cannot be fixed: tracker item 111 is empty (title 'item-111', no description, no acl), so the planner writes no us.json and just explains in prose. This is what the committed feedback-loop-results runs recorded. The gate never reaches a validator (pre-check), so llm/subagent make NO model call; it burns 3 retries, sends the final 'report the failure' block, then lets the stop through.",
+  "us_id": "111",
+  "last_message": "Tracker item 111 has an empty description and no acceptance criteria, so I did not write us.json.",
+  "expect": {
+    "script": ["BLOCK", "BLOCK", "BLOCK", "FINAL", "STOP"],
+    "llm": ["BLOCK", "BLOCK", "BLOCK", "FINAL", "STOP"],
+    "subagent": ["BLOCK", "BLOCK", "BLOCK", "FINAL", "STOP"]
+  },
+  "assert": {
+    "*": {
+      "retries": 3,
+      "checked_by_includes": "pre-check",
+      "reason_includes": "US.JSON VALIDATION FAILED after 3 retries"
+    }
+  }
+}

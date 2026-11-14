@@ -1,0 +1,10 @@
+{
+  "description": "tc-0.json repeats the ideation fields (old record format, as in an older real run, gtc-20261111-111111) — criterion 7: registration record only.",
+  "command": "batch",
+  "expect": [
+    "BLOCK"
+  ],
+  "assert": {
+    "notes_match": "tc-0"
+  }
+}

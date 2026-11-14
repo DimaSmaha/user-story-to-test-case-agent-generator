@@ -1,0 +1,11 @@
+{
+  "id": "manual",
+  "title": "Sort products on the inventory page",
+  "description": "As a shopper I want to sort the product list on the inventory page so that I can find items faster. The sort dropdown offers Name (A to Z), Name (Z to A), Price (low to high) and Price (high to low). The default order is Name (A to Z). The chosen order applies immediately, without a page reload.",
+  "ac": [
+    "The inventory page has a sort dropdown with the options Name (A to Z), Name (Z to A), Price (low to high) and Price (high to low)",
+    "The default sort order is Name (A to Z)",
+    "Choosing an option re-orders the product list immediately, without a page reload"
+  ],
+  "url": null
+}

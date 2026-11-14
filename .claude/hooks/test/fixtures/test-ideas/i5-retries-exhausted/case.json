@@ -1,0 +1,25 @@
+{
+  "description": "The agent never fixes the length mismatch: 3 feedback blocks, a final block asking for the failure report, then silence (write) / the stop is allowed (stop).",
+  "expect": {
+    "write": [
+      "BLOCK",
+      "BLOCK",
+      "BLOCK",
+      "FINAL",
+      "SILENT"
+    ],
+    "stop": [
+      "BLOCK",
+      "BLOCK",
+      "BLOCK",
+      "FINAL",
+      "STOP"
+    ]
+  },
+  "assert": {
+    "*": {
+      "retries": 3,
+      "reason_includes": "TEST-IDEAS VALIDATION FAILED after 3 retries"
+    }
+  }
+}

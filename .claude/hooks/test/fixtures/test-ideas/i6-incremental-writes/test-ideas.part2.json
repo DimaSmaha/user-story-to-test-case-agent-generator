@@ -1,0 +1,60 @@
+[
+  {
+    "index": 0,
+    "scenario": "[P1] ProductDetails: Clicking product name on inventory navigates to product details page",
+    "conditions": [
+      "User is logged in as 'standard_user'",
+      "User is on the inventory page (/inventory.html)",
+      "Cart is empty"
+    ],
+    "ideas": [
+      "Observe the inventory page listing all 6 products with clickable name links",
+      "Locate the product name link 'Sauce Labs Backpack'",
+      "Click the product name link 'Sauce Labs Backpack'",
+      "Observe that navigation occurs to the product details page"
+    ],
+    "verifications": [
+      "Inventory page is loaded and displays multiple product name links",
+      "'Sauce Labs Backpack' name link is visible and cursor is pointer",
+      "Click triggers navigation away from /inventory.html",
+      "URL changes to /inventory-item.html and the product details page for 'Sauce Labs Backpack' is displayed"
+    ],
+    "navigations": [
+      "inventory",
+      "product_details"
+    ],
+    "ac_trace": [
+      "AC1: Given a user is on the inventory page, when they click on a product name or product image, they are navigated to the dedicated product details page"
+    ],
+    "reusable_helpers": []
+  },
+  {
+    "index": 1,
+    "scenario": "[P1] ProductDetails: Clicking product image on inventory navigates to product details page",
+    "conditions": [
+      "User is logged in as 'standard_user'",
+      "User is on the inventory page (/inventory.html)",
+      "Cart is empty"
+    ],
+    "ideas": [
+      "Observe that each product on the inventory page has a clickable image",
+      "Click the product image for 'Sauce Labs Bike Light'",
+      "Observe navigation occurs to the product details page",
+      "Observe the product details page content matches the clicked product"
+    ],
+    "verifications": [
+      "Product images on the inventory page are rendered as clickable links with pointer cursor",
+      "Click on the 'Sauce Labs Bike Light' image triggers navigation",
+      "URL changes to /inventory-item.html",
+      "Product details page displays 'Sauce Labs Bike Light' name, description, and '$9.99' price"
+    ],
+    "navigations": [
+      "inventory",
+      "product_details"
+    ],
+    "ac_trace": [
+      "AC1: Given a user is on the inventory page, when they click on a product name or product image, they are navigated to the dedicated product details page"
+    ],
+    "reusable_helpers": []
+  }
+]

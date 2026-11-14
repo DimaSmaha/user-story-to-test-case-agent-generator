@@ -83,7 +83,7 @@ When story text is pasted directly: `"id": "manual"`, `"url": null`.
 { "max_retries": 3, "status": "PASSED", "retries": 1, "mode": "subagent",
   "checked_by": "subagent (us-json-reviewer.md)", "notes": [], "checked_at": "..." }
 ```
-`status`: `PASSED` | `RETRYING` | `FAILED` (flow-1a aborts) | `UNVERIFIED` (reviewer could not run).
+`status`: `PASSED` | `RETRYING` (last checked version invalid, fix never finished — flow-1a aborts) | `FAILED` (flow-1a aborts; `blocked` is set when the planner declared `BLOCKED: <reason>`) | `UNVERIFIED` (reviewer could not run). flow-1a resume-skips Phase 1 only on `PASSED` / `UNVERIFIED`.
 
 **`exploration.json`** — written by Phase 1.5 (app exploration)
 ```json
@@ -170,9 +170,10 @@ Ideation fields (`ideas`, `verifications`, `conditions`, etc.) are NOT duplicate
 ```json
 { "status": "PASSED", "retries": 0, "max_retries": 3, "trigger": "bash", "script": "batch-generate-tc.sh",
   "checked_by": "llm call (single, no tools) — lib/review-tc-llm.mjs", "model": "sonnet",
-  "path": ".workflow-artifacts/gtc-...", "indices": [0, 1, 2], "notes": [], "checked_at": "..." }
+  "path": ".workflow-artifacts/gtc-...", "indices": [0, 1, 2], "notes": [], "review_ms": 21000, "cached": false,
+  "checked_at": "..." }
 ```
-`status`: `PASSED` | `RETRYING` | `FAILED` (retries used up) | `UNVERIFIED` (reviewer could not run; `reviewer_error` set). flow-1a never aborts Phase 3 on it.
+`status`: `PASSED` | `RETRYING` | `FAILED` (retries used up) | `UNVERIFIED` (reviewer could not run; `reviewer_error` set). flow-1a never aborts Phase 3 on it, but reports it in the Phase 5 summary.
 
 **`bug-{i}.json`** — written by `ft-bug-reporter` (optional, one per exploration bug)
 ```json
@@ -225,7 +226,10 @@ Exactly one validator is active — the `--mode` in the `.claude/settings.json` 
 | `llm` | one LLM call, no tools, `us.json` + `tracker-source.json` pasted in; rules = body of `us-json-reviewer.md` | `.claude/hooks/lib/review-us-json-llm.mjs` |
 
 Switching mode needs a new Claude Code session. Every run records the active validator in `us.validation.json` (`mode`, `checked_by`) and in the feedback text (`checked by: ...`).
+A missing run folder / `us.json` is caught by the gate before any validator runs — `checked_by: "gate pre-check (...)"`, no LLM/subagent call.
+Unfixable input (empty story, denied tool): the planner ends its final message with a `BLOCKED: <reason>` line → the gate records `FAILED` (with `blocked`) at once and allows the stop, instead of burning its 3 retries.
 Hook state and log: `.workflow-artifacts/.hook-state/` (`us-json-gate.log` shows every gate run).
+Offline test cases: `npm run test:us-gate` (mode from `.claude/settings.json`; `-- --mode llm|subagent|script` overrides; `-- --verbose` prints each call's feedback). Fixtures: `.claude/hooks/test/fixtures/us-json/<case>/` (`us.json`, `tracker-source.json`, optional `us.fixed.json`, `case.json` with the expected outcome per mode). Write-up and results: `feedback-loop-results/README.md`.
 
 ### Feedback loop for inline skills (gt-test-ideation → test-ideas.json)
 
@@ -239,7 +243,10 @@ Both triggers are always registered. The entry's `"trigger"` decides which one a
 | `stop` | `Stop` in `gt-test-ideation`'s SKILL.md frontmatter (`once: true`) | when the main agent's turn ends | stderr + exit 2. Skips itself (`SKIPPED`) when the run folder already has `tc-*.json` / `links.json`, i.e. inside flow-1a |
 
 To switch, edit `"trigger"` in `artifact-gate.json` — the config is read on every run, so no restart needed. The stop trigger locates the file from the main transcript (last Write/Edit of `.workflow-artifacts/<run>/test-ideas.json` after the skill was invoked), never by "newest file".
-Same bounded loop as us-json-gate: max 3 feedback blocks, then one last block asking for a `TEST-IDEAS VALIDATION FAILED after 3 retries — <path>` reply, then silence. Retry state is per session + run folder + artifact: `.workflow-artifacts/.hook-state/artifact-gate-<run_id>-<artifact>.json`; every run is logged to `.workflow-artifacts/.hook-state/artifact-gate.log`. Status: `{run_dir}/test-ideas.validation.json`.
+Same bounded loop as us-json-gate: max 3 feedback blocks, then one last block asking for a `TEST-IDEAS VALIDATION FAILED after 3 retries — <path>` reply, then silence. A PASS resets the count (a later failure is a new problem). Retry state is per session + run folder + artifact: `.workflow-artifacts/.hook-state/artifact-gate-<run_id>-<artifact>.json`; every run is logged to `.workflow-artifacts/.hook-state/artifact-gate.log`. Status: `{run_dir}/test-ideas.validation.json`.
+Ground truth: a `test-ideas.json` whose run folder has no `scenarios.md` / `us.json` fails with one note (wrong run folder — never fabricate them). `ac_trace` "ACn: <text>" must quote `us.json.ac[n-1]`. Skipped checks (warnings) are shown as a `systemMessage` on PASS.
+Stop trigger only: a `BLOCKED: <reason>` line in the agent's final message → `FAILED` (with `blocked`) at once, stop allowed. The hook is `once: true` — any non-blocking run (PASS, SKIPPED, NO_ARTIFACT) removes it for the session; exit-2 blocks keep it.
+Offline test cases: `npm run test:artifact-gate` (trigger from `artifact-gate.json`; `-- --trigger write|stop` overrides via a temporary config copy passed in `ARTIFACT_GATE_CONFIG`). Fixtures: `.claude/hooks/test/fixtures/test-ideas/` (`_base/` + one folder per case). Write-up: `feedback-loop-results/test-ideas-and-tc.md`.
 Inline skills write in your session, so writes to `.workflow-artifacts/` may prompt for permission — add `Edit(/.workflow-artifacts/**)` to `permissions.allow` to avoid that.
 
 ### Feedback loop for gt-test-case-generator (tc-*.json, direct LLM call)
@@ -247,7 +254,9 @@ Inline skills write in your session, so writes to `.workflow-artifacts/` may pro
 TC files are written by a bash script, not by Write/Edit, so the trigger is the script's Bash call: a `PostToolUse` hook on `Bash` declared in `gt-test-case-generator`'s own SKILL.md frontmatter (`if: Bash(bash .claude/skills/gt-test-case-generator/scripts/*)`) runs `.claude/hooks/tc-gate.mjs --model sonnet`.
 The check is **one direct LLM call** — `.claude/hooks/lib/review-tc-llm.mjs`: Agent SDK `query()`, no tools, `settingSources: []`, structured output `{verdict, notes}`. Pasted in: the command + stdout, `us.json` id, the in-scope `test-ideas.json` units, `reconciliation.json`, every in-scope `tc-N.json` + `tc-steps-N.md`. Rules = the `## Acceptance criteria (LLM-reviewed)` section of the skill's SKILL.md (extracted by heading), so the generator and the reviewer read one contract.
 Run folder = the command's `--run-dir` (fallback: dirname of `--ideas-file`). Scope = `--index N` for `generate-tc.sh`, every index for `batch-generate-tc.sh`.
-Same bounded loop as artifact-gate: max 3 `{"decision":"block"}` feedback blocks, then one last block asking for a `TC VALIDATION FAILED after 3 retries — <run_dir>` reply (inside flow-1a: then continue with Phase 3.5), then silence. Reviewer error → `UNVERIFIED` + `systemMessage`, not counted as a retry. Retry state per session + run folder: `.workflow-artifacts/.hook-state/tc-gate-<run_id>.json`; log: `.workflow-artifacts/.hook-state/tc-gate.log`; status: `{run_dir}/tc.validation.json`.
+Same bounded loop as artifact-gate: max 3 `{"decision":"block"}` feedback blocks, then one last block asking for a `TC VALIDATION FAILED after 3 retries — <run_dir>` reply (inside flow-1a: then continue with Phase 3.5), then silence. A PASS resets the count. Reviewer error → `UNVERIFIED` + `systemMessage`, not counted as a retry. Retry state per session + run folder: `.workflow-artifacts/.hook-state/tc-gate-<run_id>.json`; log: `.workflow-artifacts/.hook-state/tc-gate.log`; status: `{run_dir}/tc.validation.json` (with `review_ms` and `cached`).
+Verdict cache: the state file keeps a sha256 of what the reviewer is shown (model, criteria, pasted files — not the command/stdout). Identical input in the same session → the last verdict is reused without a model call (a deterministic script re-run cannot change the files, and a stochastic judge must not be re-rolled until it passes). flow-1a reports `tc.validation.json` status in its Phase 5 `Validation:` line.
+Offline test cases: `npm run test:tc-gate` (model from the skill's hook command; `-- --model <m>` overrides; about 15 real model calls, `-- --case c6` needs none). Fixtures: `.claude/hooks/test/fixtures/tc/` (`_base/` = exact `generate-tc.sh` output for 3 scenarios, plus one folder per case).
 Limits: `PostToolUse` only fires when the script exits 0 (a batch with `[FAIL]` scenarios exits 1 → not reviewed; flow-1a's re-invoke loop covers it). The Windows PowerShell fallback (`& $bash -c "bash …"`) is not a `Bash` call, so it is not reviewed.
 
 ### Skills system

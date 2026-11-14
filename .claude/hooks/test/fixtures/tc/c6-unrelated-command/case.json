@@ -1,0 +1,7 @@
+{
+  "description": "Another script's Bash call: the gate does nothing (no output, no log line).",
+  "command": "bash .claude/skills/operations-with-issue-tracker/scripts/get.sh --id 114",
+  "expect": [
+    "IGNORED"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "description": "units 1 and 2 are swapped (index fields renumbered), so the order differs from scenarios.md.",
+  "expect": {
+    "write": [
+      "BLOCK"
+    ],
+    "stop": [
+      "BLOCK"
+    ]
+  },
+  "assert": {
+    "*": {
+      "notes_match": "order"
+    }
+  }
+}
